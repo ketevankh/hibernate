@@ -5,14 +5,12 @@ import com.example.task_hibernate.model.Trainer;
 import com.example.task_hibernate.model.Training;
 import com.example.task_hibernate.model.User;
 import com.example.task_hibernate.model.dto.Credentials;
-import com.example.task_hibernate.model.dto.UserDTO;
 import com.example.task_hibernate.service.TraineeService;
 import com.example.task_hibernate.service.TrainerService;
 import com.example.task_hibernate.service.TrainingService;
 import com.example.task_hibernate.service.UserService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -40,7 +38,7 @@ public class TaskHibernateApplication {
                 System.out.println("Trainer: " + trainer.getUser().getUserName() + " with UserId# " + trainer.getUser().getId());
 
                 Training training = trainingService.getTrainingById(1L).orElseThrow(() -> new RuntimeException("Training not found"));
-                System.out.println("Training: " + training.getTrainingName() + " for TrainerId# " + training.getTrainer() + " with TraineeId# " + training.getTrainee());
+                System.out.println("Training: " + training.getTrainingName() + " for TrainerId# " + training.getTrainer().getId() + " with TraineeId# " + training.getTrainee().getId());
 
                 return null;
             });
