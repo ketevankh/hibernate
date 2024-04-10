@@ -1,5 +1,6 @@
 package com.example.task_hibernate.repository;
 
+import com.example.task_hibernate.model.Trainee;
 import com.example.task_hibernate.model.Trainer;
 import com.example.task_hibernate.model.Training;
 import com.example.task_hibernate.model.TrainingType;
@@ -23,6 +24,15 @@ public interface TrainingRepository extends JpaRepository<Training, Long> {
             "WHERE trainee.user.userName = :username")
     List<Trainer> findTrainerByTraineeUsername(String username);
 
+    @Query("SELECT DISTINCT t.trainer FROM Training t " +
+            "JOIN t.trainee trainee " +
+            "JOIN t.trainer trainer " +
+            "WHERE trainer.user.userName = :username")
+    List<Trainee> findTraineeByTrainerUsername(String username);
+
+    @Query("SELECT tt FROM TrainingType tt")
+    List<TrainingType> findAllTrainingTypes();
+
     @Query("SELECT t FROM Training t " +
             "JOIN t.trainee.user u " +
             "LEFT JOIN t.trainer.user trainerU " +
@@ -39,6 +49,7 @@ public interface TrainingRepository extends JpaRepository<Training, Long> {
             @Param("trainerName") String trainerName,
             @Param("trainingType") TrainingTypeEnum trainingType
     );
+
     @Query("SELECT t FROM Training t " +
             "JOIN t.trainer.user u " +
             "LEFT JOIN t.trainee.user traineeU " +
@@ -53,7 +64,9 @@ public interface TrainingRepository extends JpaRepository<Training, Long> {
             @Param("traineeName") String traineeName
     );
 
-
-
+    @Query("DELETE FROM Training t " +
+            "WHERE t.trainee.user.userName = :traineeUsername " +
+            "AND t.trainer.user.userName IN :trainerUsernames")
+    Boolean deleteTraineesTrainingsWithTrainers(@Param("traineeUsername") String traineeUsername, @Param("trainerUsernames") List<String> trainerUsernames);
 
 }

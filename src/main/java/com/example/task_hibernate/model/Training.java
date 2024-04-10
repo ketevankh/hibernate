@@ -8,7 +8,7 @@ import java.util.Date;
 import java.util.Set;
 
 @Entity
-@Table(name = "TRAININGS")
+@Table
 @Data
 @NoArgsConstructor
 public class Training {
@@ -28,7 +28,7 @@ public class Training {
     @Column(nullable = false)
     private String trainingName;
 
-    @Column(name = "training_date", nullable = false)
+    @Column(nullable = false)
     private Date trainingDate;
 
     @Column(nullable = false)

@@ -2,7 +2,7 @@ package com.example.task_hibernate.service;
 
 import com.example.task_hibernate.model.dto.Credentials;
 import com.example.task_hibernate.model.User;
-import com.example.task_hibernate.model.dto.UserDTO;
+import com.example.task_hibernate.model.dto.serviceDTOs.UserDTO;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

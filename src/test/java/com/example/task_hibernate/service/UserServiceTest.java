@@ -2,7 +2,7 @@ package com.example.task_hibernate.service;
 
 import com.example.task_hibernate.model.User;
 import com.example.task_hibernate.model.dto.Credentials;
-import com.example.task_hibernate.model.dto.UserDTO;
+import com.example.task_hibernate.model.dto.serviceDTOs.UserDTO;
 import com.example.task_hibernate.repository.UserRepository;
 import com.example.task_hibernate.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;

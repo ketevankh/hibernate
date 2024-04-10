@@ -1,32 +1,35 @@
 package com.example.task_hibernate.service.impl;
 
-import com.example.task_hibernate.model.dto.Credentials;
 import com.example.task_hibernate.model.Trainee;
+import com.example.task_hibernate.model.Trainer;
+import com.example.task_hibernate.model.Training;
 import com.example.task_hibernate.model.User;
-import com.example.task_hibernate.model.dto.TraineeDTO;
-import com.example.task_hibernate.model.dto.UserDTO;
+import com.example.task_hibernate.model.dto.Credentials;
+import com.example.task_hibernate.model.dto.serviceDTOs.TraineeDTO;
+import com.example.task_hibernate.model.enums.TrainingTypeEnum;
 import com.example.task_hibernate.repository.TraineeRepository;
 import com.example.task_hibernate.service.TraineeService;
+import com.example.task_hibernate.service.TrainerService;
+import com.example.task_hibernate.service.TrainingService;
 import com.example.task_hibernate.service.UserService;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @Slf4j
 @Transactional
+@RequiredArgsConstructor
 public class TraineeServiceImpl implements TraineeService {
     private final TraineeRepository traineeRepository;
     private final UserService userService;
+    private final TrainingService trainingService;
 
-    public TraineeServiceImpl(TraineeRepository traineeRepository, UserService userService) {
-        this.traineeRepository = traineeRepository;
-        this.userService = userService;
-    }
+    private final TrainerService trainerService;
+
     @Override
     public Trainee createTrainee(TraineeDTO traineeDTO) {
         User user = userService.createUser(traineeDTO.getUser());
@@ -36,6 +39,7 @@ public class TraineeServiceImpl implements TraineeService {
         trainee.setUser(user);
         return traineeRepository.save(trainee);
     }
+
     @Override
     public List<Trainee> getAllTrainees(Credentials credentials) {
         if (userService.validateUserFailed(credentials)) {
@@ -62,6 +66,7 @@ public class TraineeServiceImpl implements TraineeService {
         }
         return traineeRepository.findByUser_UserName(userName);
     }
+
     @Override
     public boolean changeTraineePassword(String password, Credentials credentials) {
         if (userService.validateUserFailed(credentials)) {
@@ -70,29 +75,25 @@ public class TraineeServiceImpl implements TraineeService {
         }
         return userService.changeUserPassword(credentials.userName(), password);
     }
+
     @Override
-    public Optional<Trainee> updateTrainee(Trainee trainee, Credentials credentials) {
+    public Optional<Trainee> updateTrainee(TraineeDTO trainee, Credentials credentials) {
         if (userService.validateUserFailed(credentials)) {
             log.error("Invalid credentials");
             return Optional.empty();
         }
-        Optional<Trainee> tmpTrainee = traineeRepository.findById(trainee.getId());
-        if (tmpTrainee.isEmpty()) {
-           log.error("Trainee with id {} not found", trainee.getId());
-           return Optional.empty();
-        }
-        UserDTO updateUserDTO = new UserDTO(trainee.getUser().getFirstName(), trainee.getUser().getLastName(), trainee.getUser().getIsActive());
-        Optional<User> updatedUser = userService.updateUser(trainee.getUser().getId(), updateUserDTO);
+        Trainee tmpTrainee = traineeRepository.findByUser_UserName(credentials.userName()).get();
+
+        Optional<User> updatedUser = userService.updateUser(tmpTrainee.getUser().getId(), trainee.getUser());
         if (updatedUser.isEmpty()) {
-            log.error("User with id {} can't be updated", trainee.getUser().getId());
+            log.error("user update failed");
             return Optional.empty();
         }
-        Trainee updateTrainee = tmpTrainee.get();
-        updateTrainee.setAddress(trainee.getAddress());
-        updateTrainee.setDateOfBirth(trainee.getDateOfBirth());
-        updateTrainee.setUser(updatedUser.get());
-        traineeRepository.save(updateTrainee);
-        return Optional.of(updateTrainee);
+
+        tmpTrainee.setAddress(trainee.getAddress());
+        tmpTrainee.setDateOfBirth(trainee.getDateOfBirth());
+        tmpTrainee.setUser(updatedUser.get());
+        return Optional.of(traineeRepository.save(tmpTrainee));
     }
 
     @Override
@@ -111,11 +112,95 @@ public class TraineeServiceImpl implements TraineeService {
             log.error("Invalid credentials");
             return false;
         }
-        if(!traineeRepository.findByUser_UserName(userName).isPresent()) {
+        if (!traineeRepository.findByUser_UserName(userName).isPresent()) {
             log.error("Trainee with username {} not found", userName);
             return false;
         }
         traineeRepository.deleteByUser_UserName(userName);
         return true;
     }
+
+    @Override
+    public List<Trainer> getTrainers(String userName, Credentials credentials) {
+        if (userService.validateUserFailed(credentials)) {
+            log.error("Invalid credentials");
+            return Collections.emptyList();
+        }
+        Optional<Trainee> trainee = traineeRepository.findByUser_UserName(userName);
+        if (!trainee.isPresent()) {
+            log.error("Trainee with username {} not found, userName)", userName);
+            return Collections.emptyList();
+        }
+        return trainingService.getTrainersOfTrainee(userName);
+    }
+
+    @Override
+    public List<Trainer> getActiveTrainersNotAssignedTo(String userName, Credentials credentials) {
+        List<Trainer> allTrainers = trainerService.getAllTrainers(credentials);
+        if(allTrainers.isEmpty()) {
+            log.error("Invalid credentials");
+            return Collections.emptyList();
+        }
+        List<Trainer> asssignedTrainers = getTrainers(userName, credentials);
+        if (!asssignedTrainers.isEmpty()) {
+            for (Trainer trainer : asssignedTrainers) {
+                if (trainer.getUser().getIsActive()) {
+                    allTrainers.remove(trainer);
+                }
+            }
+        }
+        return allTrainers;
+    }
+
+    @Override
+    public List<Trainer> updateTrainersList(String userName, List<String> trainerUsernames, Credentials credentials) {
+        if (userService.validateUserFailed(credentials)) {
+            log.error("Invalid credentials");
+            return Collections.emptyList();
+        }
+        Optional<Trainee> trainee = traineeRepository.findByUser_UserName(userName);
+        if (!trainee.isPresent()) {
+            log.error("Trainee with username {} not found", userName);
+            return Collections.emptyList();
+        }
+        List<Trainer> tmpTrainers = trainingService.getTrainersOfTrainee(userName);
+        List<String> toRemove = new ArrayList<>();
+        if (tmpTrainers.isEmpty()) {
+            log.info("No Trainings with Trainers found, add training first");
+            return Collections.emptyList();
+        }
+        if (trainerUsernames.isEmpty()) {
+            log.info("All trainers and trainings are deleted for user: {}", userName);
+            toRemove = tmpTrainers.stream().map(trainer -> trainer.getUser().getUserName()).toList();
+        } else {
+            for (Trainer trainer : tmpTrainers) {
+                if (!trainerUsernames.contains(trainer.getUser().getUserName())) {
+                    toRemove.add(trainer.getUser().getUserName());
+                } else {
+                    log.info("No Trainings with Trainer: {} found, add training first", trainer.getUser().getUserName());
+                }
+            }
+        }
+        if (toRemove.isEmpty()) {
+            log.info("No updates with TrainersList for User: {}", userName);
+        } else {
+            trainingService.deleteTrainingsWithTrainers(userName, toRemove);
+        }
+        return trainingService.getTrainersOfTrainee(userName);
+    }
+
+    @Override
+    public List<Training> getTrainings(String userName, Date from, Date to, String trainerUserName, String trainingType, Credentials credentials) {
+        if (userService.validateUserFailed(credentials)) {
+            log.error("Invalid credentials");
+            return Collections.emptyList();
+        }
+        Optional<Trainee> trainee = traineeRepository.findByUser_UserName(userName);
+        if (!trainee.isPresent()) {
+            log.error("Trainee with username {} not found", userName);
+            return Collections.emptyList();
+        }
+        return trainingService.getTraineeTrainingsList(userName, from, to, trainerUserName, TrainingTypeEnum.valueOf(trainingType));
+    }
+
 }

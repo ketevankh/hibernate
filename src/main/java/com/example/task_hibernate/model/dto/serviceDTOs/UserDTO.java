@@ -1,4 +1,4 @@
-package com.example.task_hibernate.model.dto;
+package com.example.task_hibernate.model.dto.serviceDTOs;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
