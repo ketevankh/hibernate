@@ -16,7 +16,7 @@ public class TrainingType {
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "training_type", nullable = false, unique = true)
+    @Column(nullable = false, unique = true)
     @Enumerated(EnumType.STRING)
     private TrainingTypeEnum trainingType;
 }

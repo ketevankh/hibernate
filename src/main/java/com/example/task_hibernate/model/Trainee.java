@@ -9,7 +9,7 @@ import org.springframework.lang.Nullable;
 import java.util.Date;
 
 @Entity
-@Table(name = "TRAINEES")
+@Table(name="TRAINEES")
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
@@ -21,11 +21,11 @@ public class Trainee {
     @Nullable
     private String address;
 
-    @Column(name = "date_of_birth")
+    @Column()
     @Nullable
     private Date dateOfBirth;
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "user_id")
+    @JoinColumn
     private User user;
 }
