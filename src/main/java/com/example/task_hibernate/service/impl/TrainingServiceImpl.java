@@ -4,7 +4,7 @@ import com.example.task_hibernate.model.Trainee;
 import com.example.task_hibernate.model.Trainer;
 import com.example.task_hibernate.model.Training;
 import com.example.task_hibernate.model.TrainingType;
-import com.example.task_hibernate.model.enums.TrainingTypeEnum;
+import com.example.task_hibernate.model.enums.ExerciseType;
 import com.example.task_hibernate.repository.TraineeRepository;
 import com.example.task_hibernate.repository.TrainerRepository;
 import com.example.task_hibernate.repository.TrainingRepository;
@@ -37,7 +37,7 @@ public class TrainingServiceImpl implements TrainingService {
     }
 
     @Override
-    public List<Training> getTraineeTrainingsList(String traineeUsername, Date fromDate, Date toDate, String trainerName, TrainingTypeEnum trainingType) {
+    public List<Training> getTraineeTrainingsList(String traineeUsername, Date fromDate, Date toDate, String trainerName, ExerciseType trainingType) {
         return trainingRepository.findByTraineeUsernameAndCriteria(traineeUsername, fromDate, toDate, trainerName, trainingType);
     }
 

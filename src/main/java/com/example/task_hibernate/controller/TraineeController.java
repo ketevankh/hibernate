@@ -96,12 +96,15 @@ public class TraineeController {
 
     @PutMapping(path = "/{userName}/updateTrainersList")
     public ResponseEntity<List<TrainerDTOForList>> updateTrainersList(@PathVariable final String userName, @RequestHeader final String password, @RequestBody final List<String> trainersUserNames) {
+        ResponseEntity<List<TrainerDTOForList>> updatedTrainers;
         Credentials credentials = new Credentials(userName, password);
         if (traineeService.getTraineeByUserName(userName, credentials).isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            updatedTrainers = ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } else {
+            List<Trainer> result = traineeService.updateTrainersList(userName, trainersUserNames, credentials);
+            updatedTrainers = ResponseEntity.ok(TrainerMapper.trainerListToTrainerDTOForList(result));
         }
-        List<Trainer> result = traineeService.updateTrainersList(userName, trainersUserNames, credentials);
-        return ResponseEntity.ok(TrainerMapper.trainerListToTrainerDTOForList(result));
+        return updatedTrainers;
     }
 
     @PatchMapping(path = "/{userName}/activate-deactivate")

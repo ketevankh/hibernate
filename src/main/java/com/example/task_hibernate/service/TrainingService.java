@@ -4,7 +4,7 @@ import com.example.task_hibernate.model.Trainee;
 import com.example.task_hibernate.model.Trainer;
 import com.example.task_hibernate.model.Training;
 import com.example.task_hibernate.model.TrainingType;
-import com.example.task_hibernate.model.enums.TrainingTypeEnum;
+import com.example.task_hibernate.model.enums.ExerciseType;
 
 import java.util.Date;
 import java.util.List;
@@ -18,7 +18,7 @@ public interface TrainingService {
 
     Optional<Training> getTrainingById(Long id);
 
-    List<Training> getTraineeTrainingsList(String traineeUsername, Date fromDate, Date toDate, String trainerName, TrainingTypeEnum trainingType);
+    List<Training> getTraineeTrainingsList(String traineeUsername, Date fromDate, Date toDate, String trainerName, ExerciseType trainingType);
 
     List<Training> getTrainerTrainingsList(String trainerUsername, Date fromDate, Date toDate, String traineeName);
 

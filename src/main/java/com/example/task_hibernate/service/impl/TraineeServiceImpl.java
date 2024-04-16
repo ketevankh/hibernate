@@ -6,7 +6,7 @@ import com.example.task_hibernate.model.Training;
 import com.example.task_hibernate.model.User;
 import com.example.task_hibernate.model.dto.Credentials;
 import com.example.task_hibernate.model.dto.serviceDTOs.TraineeDTO;
-import com.example.task_hibernate.model.enums.TrainingTypeEnum;
+import com.example.task_hibernate.model.enums.ExerciseType;
 import com.example.task_hibernate.repository.TraineeRepository;
 import com.example.task_hibernate.service.TraineeService;
 import com.example.task_hibernate.service.TrainerService;
@@ -108,16 +108,19 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     public boolean deleteTrainee(String userName, Credentials credentials) {
-        if (userService.validateUserFailed(credentials)) {
+
+        //FIXME Best practice is to have only one return statement
+        boolean traineeDeleted = false;
+
+        if (userService.validateUserFailed(credentials)) { //FIXME 'validateUserFailed' would be better to move to Validator which will be called from controller and all typical actions like 'log.error("Invalid credentials")' must be a part of validator method implementation
             log.error("Invalid credentials");
-            return false;
-        }
-        if (!traineeRepository.findByUser_UserName(userName).isPresent()) {
+        } else if (traineeRepository.findByUser_UserName(userName).isEmpty()) {
             log.error("Trainee with username {} not found", userName);
-            return false;
+        } else {
+            traineeRepository.deleteByUser_UserName(userName);
+            traineeDeleted = true;
         }
-        traineeRepository.deleteByUser_UserName(userName);
-        return true;
+        return traineeDeleted;
     }
 
     @Override
@@ -193,14 +196,14 @@ public class TraineeServiceImpl implements TraineeService {
     public List<Training> getTrainings(String userName, Date from, Date to, String trainerUserName, String trainingType, Credentials credentials) {
         if (userService.validateUserFailed(credentials)) {
             log.error("Invalid credentials");
-            return Collections.emptyList();
+            return Collections.emptyList(); //FIXME Returning the immutable sheet is not always justified
         }
         Optional<Trainee> trainee = traineeRepository.findByUser_UserName(userName);
-        if (!trainee.isPresent()) {
-            log.error("Trainee with username {} not found", userName);
+        if (trainee.isEmpty()) {
+            log.error("Trainee with username {} not found", userName); //FIXME usually we have error logs only when we catch or throw some exceptions, here WARN or INFO would be better
             return Collections.emptyList();
         }
-        return trainingService.getTraineeTrainingsList(userName, from, to, trainerUserName, TrainingTypeEnum.valueOf(trainingType));
+        return trainingService.getTraineeTrainingsList(userName, from, to, trainerUserName, ExerciseType.valueOf(trainingType));
     }
 
 }

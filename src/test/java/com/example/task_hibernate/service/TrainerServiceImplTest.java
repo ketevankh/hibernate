@@ -4,7 +4,7 @@ import com.example.task_hibernate.model.*;
 import com.example.task_hibernate.model.dto.Credentials;
 import com.example.task_hibernate.model.dto.serviceDTOs.TrainerDTO;
 import com.example.task_hibernate.model.dto.serviceDTOs.UserDTO;
-import com.example.task_hibernate.model.enums.TrainingTypeEnum;
+import com.example.task_hibernate.model.enums.ExerciseType;
 import com.example.task_hibernate.repository.TrainerRepository;
 import com.example.task_hibernate.service.impl.TrainerServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -73,7 +73,7 @@ public class TrainerServiceImplTest {
     void createTrainer() {
         UserDTO userDTO = new UserDTO("John", "Doe", true);
 
-        TrainingType specialization = new TrainingType(1L, TrainingTypeEnum.CARDIO);
+        TrainingType specialization = new TrainingType(1L, ExerciseType.CARDIO);
 
         TrainerDTO trainerDTO = new TrainerDTO(specialization, userDTO);
 
@@ -157,7 +157,7 @@ public class TrainerServiceImplTest {
         user.setIsActive(true);
         trainer.setUser(user);
 
-        TrainingType specialization = new TrainingType(1L, TrainingTypeEnum.CARDIO);
+        TrainingType specialization = new TrainingType(1L, ExerciseType.CARDIO);
 
         TrainerDTO trainerDTO = new TrainerDTO(specialization, new UserDTO("John", "Doe", true));
 
@@ -245,7 +245,7 @@ public class TrainerServiceImplTest {
         Date from = new Date();
         Date to = new Date();
         String trainerUserName = "trainer";
-        TrainingTypeEnum trainingType = TrainingTypeEnum.valueOf("CARDIO");
+        ExerciseType trainingType = ExerciseType.valueOf("CARDIO");
 
         when(userService.validateUserFailed(credentials)).thenReturn(true);
         assertTrue(trainerService.getTrainings(userName, from, to, trainerUserName, trainingType.name(), credentials).isEmpty());

@@ -34,7 +34,9 @@ public class TrainerController {
         return "Test";
     }
 
-    @PostMapping(path = "/register")
+    //FIXME Error handling is missing
+    //FIXME Swagger 2 annotations are missing
+    @PostMapping(path = "/register") //FIXME Naming :(  https://restfulapi.net/resource-naming/   https://medium.com/@nadinCodeHat/rest-api-naming-conventions-and-best-practices-1c4e781eb6a5
     @Operation(summary = "Register a new trainer")
     public ResponseEntity<Credentials> registerTrainer(@RequestBody final TrainerDTO trainerDTO) {
         Trainer trainer = trainerService.createTrainer(trainerDTO);
@@ -70,7 +72,7 @@ public class TrainerController {
     @PutMapping(path = "/updateTrainer")
     public ResponseEntity<TrainerResponseDTO> updateTrainer(@RequestBody final TrainerRequestDTO trainerRequestDTO, @RequestHeader final String userName, @RequestHeader final String password) {
         Credentials credentials = new Credentials(userName, password);
-        TrainerDTO trainerDTO = trainerMapper.trainerRequestDTOToTrainerDTO(trainerRequestDTO);
+        TrainerDTO trainerDTO = trainerMapper.trainerRequestDTOToTrainerDTO(trainerRequestDTO); //FIXME Mapping must be a part of service or repository (usually last one is preferable)
         Trainer trainer = trainerService.updateTrainer(trainerDTO, credentials).orElse(null);
         if (trainer == null) {
             return ResponseEntity.notFound().build();

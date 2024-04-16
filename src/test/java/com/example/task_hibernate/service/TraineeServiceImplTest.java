@@ -6,7 +6,7 @@ import com.example.task_hibernate.model.Trainee;
 import com.example.task_hibernate.model.User;
 import com.example.task_hibernate.model.dto.serviceDTOs.TraineeDTO;
 import com.example.task_hibernate.model.dto.serviceDTOs.UserDTO;
-import com.example.task_hibernate.model.enums.TrainingTypeEnum;
+import com.example.task_hibernate.model.enums.ExerciseType;
 import com.example.task_hibernate.repository.TraineeRepository;
 import com.example.task_hibernate.service.impl.TraineeServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -332,7 +332,7 @@ public class TraineeServiceImplTest {
         Date from = new Date();
         Date to = new Date();
         String trainerUserName = "trainer";
-        TrainingTypeEnum trainingType = TrainingTypeEnum.valueOf("CARDIO");
+        ExerciseType trainingType = ExerciseType.valueOf("CARDIO");
 
         when(userService.validateUserFailed(credentials)).thenReturn(true);
         assertTrue(traineeService.getTrainings(userName, from, to, trainerUserName, trainingType.name(), credentials).isEmpty());

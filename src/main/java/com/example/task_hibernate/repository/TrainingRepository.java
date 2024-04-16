@@ -4,7 +4,7 @@ import com.example.task_hibernate.model.Trainee;
 import com.example.task_hibernate.model.Trainer;
 import com.example.task_hibernate.model.Training;
 import com.example.task_hibernate.model.TrainingType;
-import com.example.task_hibernate.model.enums.TrainingTypeEnum;
+import com.example.task_hibernate.model.enums.ExerciseType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -47,7 +47,7 @@ public interface TrainingRepository extends JpaRepository<Training, Long> {
             @Param("fromDate") Date fromDate,
             @Param("toDate") Date toDate,
             @Param("trainerName") String trainerName,
-            @Param("trainingType") TrainingTypeEnum trainingType
+            @Param("trainingType") ExerciseType trainingType
     );
 
     @Query("SELECT t FROM Training t " +

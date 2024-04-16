@@ -1,7 +1,7 @@
 package com.example.task_hibernate.service;
 
 import com.example.task_hibernate.model.*;
-import com.example.task_hibernate.model.enums.TrainingTypeEnum;
+import com.example.task_hibernate.model.enums.ExerciseType;
 import com.example.task_hibernate.repository.TrainingRepository;
 import com.example.task_hibernate.service.impl.TrainingServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,7 +47,7 @@ class TrainingServiceImplTest {
         Date fromDate = new Date();
         Date toDate = new Date();
         String trainerName = "test";
-        TrainingTypeEnum trainingType = TrainingTypeEnum.CARDIO;
+        ExerciseType trainingType = ExerciseType.CARDIO;
         trainingService.getTraineeTrainingsList(traineeUsername, fromDate, toDate, trainerName, trainingType);
         verify(trainingRepository, times(1)).findByTraineeUsernameAndCriteria(traineeUsername, fromDate, toDate, trainerName, trainingType);
     }
@@ -84,7 +84,7 @@ class TrainingServiceImplTest {
         trainer.setUser(userTrainer);
         trainer.setId(1L);
 
-        TrainingType trainingType = new TrainingType(1L, TrainingTypeEnum.CARDIO);
+        TrainingType trainingType = new TrainingType(1L, ExerciseType.CARDIO);
         Training training = new Training();
         training.setTrainee(trainee);
         training.setTrainer(trainer);

@@ -1,6 +1,6 @@
 package com.example.task_hibernate.model;
 
-import com.example.task_hibernate.model.enums.TrainingTypeEnum;
+import com.example.task_hibernate.model.enums.ExerciseType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -18,5 +18,5 @@ public class TrainingType {
 
     @Column(nullable = false, unique = true)
     @Enumerated(EnumType.STRING)
-    private TrainingTypeEnum trainingType;
+    private ExerciseType trainingType;
 }

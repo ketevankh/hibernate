@@ -6,8 +6,6 @@ import com.example.task_hibernate.model.Training;
 import com.example.task_hibernate.model.User;
 import com.example.task_hibernate.model.dto.Credentials;
 import com.example.task_hibernate.model.dto.serviceDTOs.TrainerDTO;
-import com.example.task_hibernate.model.dto.serviceDTOs.UserDTO;
-import com.example.task_hibernate.model.enums.TrainingTypeEnum;
 import com.example.task_hibernate.repository.TrainerRepository;
 import com.example.task_hibernate.service.TrainerService;
 import com.example.task_hibernate.service.TrainingService;
