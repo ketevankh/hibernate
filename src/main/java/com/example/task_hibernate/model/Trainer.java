@@ -19,6 +19,6 @@ public class Trainer {
     private TrainingType trainingType;
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn
+    @JoinColumn(nullable = false)
     private User user;
 }

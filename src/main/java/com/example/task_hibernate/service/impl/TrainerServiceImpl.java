@@ -1,5 +1,7 @@
 package com.example.task_hibernate.service.impl;
 
+import com.example.task_hibernate.exceptions.ResourceNotFoundException;
+import com.example.task_hibernate.exceptions.UpdateFailedException;
 import com.example.task_hibernate.model.Trainee;
 import com.example.task_hibernate.model.Trainer;
 import com.example.task_hibernate.model.Training;
@@ -39,105 +41,83 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     public List<Trainer> getAllTrainers(Credentials credentials) {
-        if (userService.validateUserFailed(credentials)) {
-            log.error("Invalid credentials");
-            return Collections.emptyList();
-        }
+        userService.validateUserCredentials(credentials);
         return trainerRepository.findAll();
     }
 
     @Override
     public Optional<Trainer> getTrainerById(Long id, Credentials credentials) {
-        if (userService.validateUserFailed(credentials)) {
-            log.error("Invalid credentials");
-            return Optional.empty();
-        }
+        userService.validateUserCredentials(credentials);
         return trainerRepository.findById(id);
     }
 
     @Override
     public Optional<Trainer> getTrainerByUserName(String userName, Credentials credentials) {
-        if (userService.validateUserFailed(credentials)) {
-            log.error("Invalid credentials");
-            return Optional.empty();
-        }
+        userService.validateUserCredentials(credentials);
         return trainerRepository.findByUser_UserName(userName);
     }
     @Override
     public boolean changeTrainerPassword(String password, Credentials credentials) {
-        if (userService.validateUserFailed(credentials)) {
-            log.error("Invalid credentials");
-            return false;
-        }
+        userService.validateUserCredentials(credentials);
         return userService.changeUserPassword(password, credentials.userName());
     }
 
     @Override
     public Optional<Trainer> updateTrainer(TrainerDTO trainer, Credentials credentials) {
-        if (userService.validateUserFailed(credentials)) {
-            log.error("Invalid credentials");
-            return Optional.empty();
-        }
-        Trainer tmpTrainer = trainerRepository.findByUser_UserName(credentials.userName()).get();
+        userService.validateUserCredentials(credentials);
 
+        Trainer tmpTrainer = trainerRepository.findByUser_UserName(credentials.userName()).get();
         Optional<User> updatedUser = userService.updateUser(tmpTrainer.getUser().getId(), trainer.getUser());
-        if (updatedUser.isEmpty()) {
-            log.error("user update failed");
-            return Optional.empty();
+        if (!updatedUser.isPresent()) {
+            log.error("User update failed");
+            throw new UpdateFailedException("User update failed");
         }
+
         tmpTrainer.setTrainingType(trainer.getSpecialization());
         tmpTrainer.setUser(updatedUser.get());
         return Optional.of(trainerRepository.save(tmpTrainer));
     }
+
     @Override
     public boolean changeActiveStatus(Boolean isActive, Credentials credentials) {
-        if (userService.validateUserFailed(credentials)) {
-            log.error("Invalid credentials");
-            return false;
-        }
+        userService.validateUserCredentials(credentials);
         Trainer trainer = trainerRepository.findByUser_UserName(credentials.userName()).get();
         return userService.changeActiveStatus(trainer.getUser().getId(), isActive);
     }
 
     @Override
     public boolean deleteTrainer(String userName, Credentials credentials) {
-        if (userService.validateUserFailed(credentials)) {
-            log.error("Invalid credentials");
-            return false;
+        userService.validateUserCredentials(credentials);
+
+        boolean trainerDeleted = false;
+
+        if (findTrainerWithUsername(userName)) {
+            trainerRepository.deleteByUser_UserName(userName);
+            trainerDeleted = true;
         }
-        if(!trainerRepository.findByUser_UserName(userName).isPresent()) {
-            log.error("Trainee with username {} not found", userName);
-            return false;
-        }
-        trainerRepository.deleteByUser_UserName(userName);
-        return true;
+        return trainerDeleted;
     }
 
     @Override
     public List<Trainee> getTrainees(String userName, Credentials credentials) {
-        if(userService.validateUserFailed(credentials)) {
-            log.error("Invalid credentials");
-            return Collections.emptyList();
-        }
-        Optional<Trainer> trainer = trainerRepository.findByUser_UserName(userName);
-        if(!trainer.isPresent()) {
-            log.error("Trainer with username {} not found, userName)", userName);
-            return Collections.emptyList();
-        }
+        userService.validateUserCredentials(credentials);
+        findTrainerWithUsername(userName);
         return trainingService.getTraineesOfTrainer(userName);
     }
 
     @Override
     public List<Training> getTrainings(String userName, Date from, Date to, String trainerUserName, String trainingType, Credentials credentials) {
-        if(userService.validateUserFailed(credentials)) {
-            log.error("Invalid credentials");
-            return Collections.emptyList();
-        }
-        Optional<Trainer> trainer = trainerRepository.findByUser_UserName(userName);
-        if(!trainer.isPresent()) {
-            log.error("Trainee with username {} not found", userName);
-            return Collections.emptyList();
-        }
+        userService.validateUserCredentials(credentials);
+        findTrainerWithUsername(userName);
         return trainingService.getTrainerTrainingsList(userName, from, to, trainerUserName);
+    }
+
+    private Boolean findTrainerWithUsername(String username) {
+        Optional<Trainer> trainer = trainerRepository.findByUser_UserName(username);
+        if (!trainer.isPresent()) {
+            log.error("Trainer with username {} not found, userName)", username);
+            throw new ResourceNotFoundException("Trainer with username " + username + " not found");
+        }
+        return trainerRepository.findByUser_UserName(username).isPresent();
     }
 }

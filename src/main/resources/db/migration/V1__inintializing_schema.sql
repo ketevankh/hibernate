@@ -16,23 +16,23 @@ CREATE TABLE IF NOT EXISTS TRAINEES (
                                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
                                         address VARCHAR(255),
                                         date_of_birth DATE,
-                                        user_id BIGINT,
+                                        user_id BIGINT NOT NULL,
                                         FOREIGN KEY (user_id) REFERENCES USERS(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS TRAINERS (
                                         id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                                        user_id BIGINT,
-                                        training_type_id BIGINT,
+                                        user_id BIGINT NOT NULL,
+                                        training_type_id BIGINT NOT NULL,
                                         FOREIGN KEY (user_id) REFERENCES USERS(id) ON DELETE CASCADE,
                                         FOREIGN KEY (training_type_id) REFERENCES TRAINING_TYPES(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS TRAININGS (
                                          id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                                         trainee_id BIGINT,
-                                         trainer_id BIGINT,
-                                         training_type_id BIGINT,
+                                         trainee_id BIGINT NOT NULL,
+                                         trainer_id BIGINT NOT NULL,
+                                         training_type_id BIGINT NOT NULL,
                                          training_name VARCHAR(255) NOT NULL,
                                          training_date DATE NOT NULL,
                                          duration INT NOT NULL,

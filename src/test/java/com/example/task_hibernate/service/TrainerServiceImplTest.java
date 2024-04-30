@@ -42,14 +42,14 @@ public class TrainerServiceImplTest {
     void getAllTrainers() {
         Credentials credentials = new Credentials("username", "password");
 
-        when(userService.validateUserFailed(credentials)).thenReturn(true);
+        when(userService.validateUserCredentials(credentials)).thenReturn(true);
         assertTrue(trainerService.getAllTrainers(credentials).isEmpty());
-        verify(userService, times(1)).validateUserFailed(credentials);
+        verify(userService, times(1)).validateUserCredentials(credentials);
 
-        when(userService.validateUserFailed(credentials)).thenReturn(false);
+        when(userService.validateUserCredentials(credentials)).thenReturn(false);
         when(trainerRepository.findAll()).thenReturn(Collections.singletonList(new Trainer()));
         assertFalse(trainerService.getAllTrainers(credentials).isEmpty());
-        verify(userService, times(2)).validateUserFailed(credentials);
+        verify(userService, times(2)).validateUserCredentials(credentials);
         verify(trainerRepository, times(1)).findAll();
     }
 
@@ -58,14 +58,14 @@ public class TrainerServiceImplTest {
         Credentials credentials = new Credentials("username", "password");
         String userName = "testUser";
 
-        when(userService.validateUserFailed(credentials)).thenReturn(true);
+        when(userService.validateUserCredentials(credentials)).thenReturn(true);
         assertFalse(trainerService.getTrainerByUserName(userName, credentials).isPresent());
-        verify(userService, times(1)).validateUserFailed(credentials);
+        verify(userService, times(1)).validateUserCredentials(credentials);
 
-        when(userService.validateUserFailed(credentials)).thenReturn(false);
+        when(userService.validateUserCredentials(credentials)).thenReturn(false);
         when(trainerRepository.findByUser_UserName(userName)).thenReturn(Optional.of(new Trainer()));
         assertTrue(trainerService.getTrainerByUserName(userName, credentials).isPresent());
-        verify(userService, times(2)).validateUserFailed(credentials);
+        verify(userService, times(2)).validateUserCredentials(credentials);
         verify(trainerRepository, times(1)).findByUser_UserName(userName);
     }
 
@@ -104,14 +104,14 @@ public class TrainerServiceImplTest {
         Credentials credentials = new Credentials("username", "password");
         Long id = 1L;
 
-        when(userService.validateUserFailed(credentials)).thenReturn(true);
+        when(userService.validateUserCredentials(credentials)).thenReturn(true);
         assertTrue(trainerService.getTrainerById(id, credentials).isEmpty());
-        verify(userService, times(1)).validateUserFailed(credentials);
+        verify(userService, times(1)).validateUserCredentials(credentials);
 
-        when(userService.validateUserFailed(credentials)).thenReturn(false);
+        when(userService.validateUserCredentials(credentials)).thenReturn(false);
         when(trainerRepository.findById(id)).thenReturn(Optional.empty());
         assertTrue(trainerService.getTrainerById(id, credentials).isEmpty());
-        verify(userService, times(2)).validateUserFailed(credentials);
+        verify(userService, times(2)).validateUserCredentials(credentials);
         verify(trainerRepository, times(1)).findById(id);
 
         Trainer trainer = new Trainer();
@@ -119,7 +119,7 @@ public class TrainerServiceImplTest {
         Optional<Trainer> result = trainerService.getTrainerById(id, credentials);
         assertTrue(result.isPresent());
         assertEquals(trainer, result.get());
-        verify(userService, times(3)).validateUserFailed(credentials);
+        verify(userService, times(3)).validateUserCredentials(credentials);
         verify(trainerRepository, times(2)).findById(id);
     }
 
@@ -128,20 +128,20 @@ public class TrainerServiceImplTest {
         Credentials credentials = new Credentials("username", "password");
         String newPassword = "newPassword";
 
-        when(userService.validateUserFailed(credentials)).thenReturn(true);
+        when(userService.validateUserCredentials(credentials)).thenReturn(true);
         assertFalse(trainerService.changeTrainerPassword(newPassword, credentials));
-        verify(userService, times(1)).validateUserFailed(credentials);
+        verify(userService, times(1)).validateUserCredentials(credentials);
 
-        when(userService.validateUserFailed(credentials)).thenReturn(false);
+        when(userService.validateUserCredentials(credentials)).thenReturn(false);
         when(userService.changeUserPassword(anyString(), anyString())).thenReturn(false);
         assertFalse(trainerService.changeTrainerPassword(newPassword, credentials));
-        verify(userService, times(2)).validateUserFailed(credentials);
+        verify(userService, times(2)).validateUserCredentials(credentials);
         verify(userService, times(1)).changeUserPassword(anyString(), anyString());
 
 
         when(userService.changeUserPassword(anyString(), anyString())).thenReturn(true);
         assertTrue(trainerService.changeTrainerPassword(newPassword, credentials));
-        verify(userService, times(3)).validateUserFailed(credentials);
+        verify(userService, times(3)).validateUserCredentials(credentials);
         verify(userService, times(2)).changeUserPassword(anyString(), anyString());
     }
 
@@ -165,11 +165,11 @@ public class TrainerServiceImplTest {
         updatedTrainer.setId(1L);
         updatedTrainer.setUser(user);
 
-        when(userService.validateUserFailed(credentials)).thenReturn(true);
+        when(userService.validateUserCredentials(credentials)).thenReturn(true);
         Optional<Trainer> result = trainerService.updateTrainer(trainerDTO, credentials);
         assertFalse(result.isPresent());
 
-        when(userService.validateUserFailed(credentials)).thenReturn(false);
+        when(userService.validateUserCredentials(credentials)).thenReturn(false);
         when(trainerRepository.findByUser_UserName(credentials.userName())).thenReturn(Optional.of(trainer));
         UserDTO updateUserDTO = new UserDTO(trainer.getUser().getFirstName(), trainer.getUser().getLastName(), trainer.getUser().getIsActive());
         when(userService.updateUser(trainer.getUser().getId(), updateUserDTO)).thenReturn(Optional.empty());
@@ -182,7 +182,7 @@ public class TrainerServiceImplTest {
         assertTrue(result.isPresent());
         assertEquals(updatedTrainer, result.get());
 
-        verify(userService, times(3)).validateUserFailed(credentials);
+        verify(userService, times(3)).validateUserCredentials(credentials);
         verify(trainerRepository, times(2)).findByUser_UserName(credentials.userName());
         verify(userService, times(2)).updateUser(trainer.getUser().getId(), updateUserDTO);
         verify(trainerRepository, times(1)).save(any(Trainer.class));
@@ -193,16 +193,16 @@ public class TrainerServiceImplTest {
         Credentials credentials = new Credentials("username", "password");
         Boolean isActive = true;
 
-        when(userService.validateUserFailed(credentials)).thenReturn(true);
+        when(userService.validateUserCredentials(credentials)).thenReturn(true);
         assertFalse(trainerService.changeActiveStatus(isActive, credentials));
-        verify(userService, times(1)).validateUserFailed(credentials);
+        verify(userService, times(1)).validateUserCredentials(credentials);
 
         when(trainerRepository.findByUser_UserName(credentials.userName())).thenReturn(Optional.of(new Trainer()));
         when(userService.changeActiveStatus(anyLong(), anyBoolean())).thenReturn(false);
         assertFalse(trainerService.changeActiveStatus(isActive, credentials));
-        verify(userService, times(2)).validateUserFailed(credentials);
+        verify(userService, times(2)).validateUserCredentials(credentials);
 
-        when(userService.validateUserFailed(credentials)).thenReturn(false);
+        when(userService.validateUserCredentials(credentials)).thenReturn(false);
         when(userService.changeActiveStatus(anyLong(), anyBoolean())).thenReturn(true);
         Trainer trainer = new Trainer();
         User user = new User();
@@ -212,7 +212,7 @@ public class TrainerServiceImplTest {
         when(trainerRepository.findByUser_UserName(credentials.userName())).thenReturn(Optional.of(trainer));
         when(trainerRepository.findByUser_UserName(credentials.userName())).thenReturn(Optional.of(trainer));
         assertTrue(trainerService.changeActiveStatus(isActive, credentials));
-        verify(userService, times(3)).validateUserFailed(credentials);
+        verify(userService, times(3)).validateUserCredentials(credentials);
         verify(userService, times(1)).changeActiveStatus(anyLong(), anyBoolean());
     }
 
@@ -221,19 +221,19 @@ public class TrainerServiceImplTest {
         Credentials credentials = new Credentials("username", "password");
         String userName = "testUser";
 
-        when(userService.validateUserFailed(credentials)).thenReturn(true);
+        when(userService.validateUserCredentials(credentials)).thenReturn(true);
         assertFalse(trainerService.deleteTrainer(userName, credentials));
-        verify(userService, times(1)).validateUserFailed(credentials);
+        verify(userService, times(1)).validateUserCredentials(credentials);
 
-        when(userService.validateUserFailed(credentials)).thenReturn(false);
+        when(userService.validateUserCredentials(credentials)).thenReturn(false);
         when(trainerRepository.findByUser_UserName(userName)).thenReturn(Optional.empty());
         assertFalse(trainerService.deleteTrainer(userName, credentials));
-        verify(userService, times(2)).validateUserFailed(credentials);
+        verify(userService, times(2)).validateUserCredentials(credentials);
         verify(trainerRepository, times(1)).findByUser_UserName(userName);
 
         when(trainerRepository.findByUser_UserName(userName)).thenReturn(Optional.of(new Trainer()));
         assertTrue(trainerService.deleteTrainer(userName, credentials));
-        verify(userService, times(3)).validateUserFailed(credentials);
+        verify(userService, times(3)).validateUserCredentials(credentials);
         verify(trainerRepository, times(2)).findByUser_UserName(userName);
         verify(trainerRepository, times(1)).deleteByUser_UserName(userName);
     }
@@ -247,26 +247,26 @@ public class TrainerServiceImplTest {
         String trainerUserName = "trainer";
         ExerciseType trainingType = ExerciseType.valueOf("CARDIO");
 
-        when(userService.validateUserFailed(credentials)).thenReturn(true);
+        when(userService.validateUserCredentials(credentials)).thenReturn(true);
         assertTrue(trainerService.getTrainings(userName, from, to, trainerUserName, trainingType.name(), credentials).isEmpty());
-        verify(userService, times(1)).validateUserFailed(credentials);
+        verify(userService, times(1)).validateUserCredentials(credentials);
 
-        when(userService.validateUserFailed(credentials)).thenReturn(false);
+        when(userService.validateUserCredentials(credentials)).thenReturn(false);
         when(trainerRepository.findByUser_UserName(userName)).thenReturn(Optional.empty());
         assertTrue(trainerService.getTrainings(userName, from, to, trainerUserName, trainingType.name(), credentials).isEmpty());
-        verify(userService, times(2)).validateUserFailed(credentials);
+        verify(userService, times(2)).validateUserCredentials(credentials);
         verify(trainerRepository, times(1)).findByUser_UserName(userName);
 
         when(trainerRepository.findByUser_UserName(userName)).thenReturn(Optional.of(new Trainer()));
         when(trainingService.getTrainerTrainingsList(userName, from, to, trainerUserName)).thenReturn(Collections.emptyList());
         assertTrue(trainerService.getTrainings(userName, from, to, trainerUserName, trainingType.name(), credentials).isEmpty());
-        verify(userService, times(3)).validateUserFailed(credentials);
+        verify(userService, times(3)).validateUserCredentials(credentials);
         verify(trainerRepository, times(2)).findByUser_UserName(userName);
         verify(trainingService, times(1)).getTrainerTrainingsList(userName, from, to, trainerUserName);
 
         when(trainingService.getTrainerTrainingsList(userName, from, to, trainerUserName)).thenReturn(Collections.singletonList(null));
         assertFalse(trainerService.getTrainings(userName, from, to, trainerUserName, trainingType.name(), credentials).isEmpty());
-        verify(userService, times(4)).validateUserFailed(credentials);
+        verify(userService, times(4)).validateUserCredentials(credentials);
         verify(trainerRepository, times(3)).findByUser_UserName(userName);
         verify(trainingService, times(2)).getTrainerTrainingsList(userName, from, to, trainerUserName);
     }
@@ -276,26 +276,26 @@ public class TrainerServiceImplTest {
         Credentials credentials = new Credentials("username", "password");
         String userName = "testUser";
 
-        when(userService.validateUserFailed(credentials)).thenReturn(true);
+        when(userService.validateUserCredentials(credentials)).thenReturn(true);
         assertTrue(trainerService.getTrainees(userName, credentials).isEmpty());
-        verify(userService, times(1)).validateUserFailed(credentials);
+        verify(userService, times(1)).validateUserCredentials(credentials);
 
-        when(userService.validateUserFailed(credentials)).thenReturn(false);
+        when(userService.validateUserCredentials(credentials)).thenReturn(false);
         when(trainerRepository.findByUser_UserName(userName)).thenReturn(Optional.empty());
         assertTrue(trainerService.getTrainees(userName, credentials).isEmpty());
-        verify(userService, times(2)).validateUserFailed(credentials);
+        verify(userService, times(2)).validateUserCredentials(credentials);
         verify(trainerRepository, times(1)).findByUser_UserName(userName);
 
         when(trainerRepository.findByUser_UserName(userName)).thenReturn(Optional.of(new Trainer()));
         when(trainingService.getTraineesOfTrainer(userName)).thenReturn(Collections.emptyList());
         assertTrue(trainerService.getTrainees(userName, credentials).isEmpty());
-        verify(userService, times(3)).validateUserFailed(credentials);
+        verify(userService, times(3)).validateUserCredentials(credentials);
         verify(trainerRepository, times(2)).findByUser_UserName(userName);
         verify(trainingService, times(1)).getTraineesOfTrainer(userName);
 
         when(trainingService.getTraineesOfTrainer(userName)).thenReturn(Collections.singletonList(null));
         assertFalse(trainerService.getTrainees(userName, credentials).isEmpty());
-        verify(userService, times(4)).validateUserFailed(credentials);
+        verify(userService, times(4)).validateUserCredentials(credentials);
         verify(trainerRepository, times(3)).findByUser_UserName(userName);
         verify(trainingService, times(2)).getTraineesOfTrainer(userName);
     }

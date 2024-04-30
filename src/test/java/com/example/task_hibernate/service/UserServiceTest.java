@@ -231,19 +231,19 @@ public class UserServiceTest {
 
 
         when(userRepository.findByUserName(userName)).thenReturn(Optional.empty());
-        boolean result = userService.validateUserFailed(credentials);
+        boolean result = userService.validateUserCredentials(credentials);
         assertTrue(result);
         verify(userRepository, times(1)).findByUserName(userName);
 
         credentials = new Credentials(userName, "wrongPassword");
         when(userRepository.findByUserName(userName)).thenReturn(Optional.of(user));
-        result = userService.validateUserFailed(credentials);
+        result = userService.validateUserCredentials(credentials);
         assertTrue(result);
         verify(userRepository, times(2)).findByUserName(userName);
 
         credentials = new Credentials(userName, password);
         when(userRepository.findByUserName(userName)).thenReturn(Optional.of(user));
-        result = userService.validateUserFailed(credentials);
+        result = userService.validateUserCredentials(credentials);
         assertFalse(result);
         verify(userRepository, times(3)).findByUserName(userName);
     }

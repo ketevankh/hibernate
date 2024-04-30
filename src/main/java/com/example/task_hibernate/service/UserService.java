@@ -10,6 +10,7 @@ import java.util.Optional;
 
 @Service
 public interface UserService {
+
     List<User> getAllUsers();
 
     Optional<User> getUserById(Long id);
@@ -19,6 +20,7 @@ public interface UserService {
     User createUser(UserDTO userDTO);
 
     boolean changeUserPassword(String password, String userName);
+
     Optional<User> updateUser(Long id, UserDTO userDTO);
 
     boolean changeActiveStatus(Long id, Boolean isActive);
@@ -26,6 +28,9 @@ public interface UserService {
     void deleteUser(Long id);
 
     String generatePassword();
+
     String generateUserName(String firstName, String lastName);
-    boolean validateUserFailed(Credentials credentials);
+
+    boolean validateUserCredentials(Credentials credentials);
+
 }

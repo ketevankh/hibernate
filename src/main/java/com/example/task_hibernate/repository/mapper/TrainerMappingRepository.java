@@ -1,26 +1,21 @@
-package com.example.task_hibernate.mapper;
+package com.example.task_hibernate.repository.mapper;
 
 import com.example.task_hibernate.model.Trainee;
 import com.example.task_hibernate.model.Trainer;
 import com.example.task_hibernate.model.User;
-import com.example.task_hibernate.model.dto.controllerDTOs.request.TraineeRequestDTO;
+import com.example.task_hibernate.model.dto.controllerDTOs.request.TrainerRequestDTO;
 import com.example.task_hibernate.model.dto.controllerDTOs.response.TraineeDTOForList;
+import com.example.task_hibernate.model.dto.controllerDTOs.response.TrainerDTOForList;
 import com.example.task_hibernate.model.dto.controllerDTOs.response.TrainerResponseDTO;
-import com.example.task_hibernate.model.dto.serviceDTOs.TraineeDTO;
 import com.example.task_hibernate.model.dto.serviceDTOs.TrainerDTO;
 import com.example.task_hibernate.model.dto.serviceDTOs.UserDTO;
-import com.example.task_hibernate.model.dto.controllerDTOs.response.TrainerDTOForList;
-import com.example.task_hibernate.model.dto.controllerDTOs.request.TrainerRequestDTO;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
-@Component
-@RequiredArgsConstructor
-public class TrainerMapper {
+@Repository
+public class TrainerMappingRepository {
     public TrainerDTO trainerControllerDTOToTrainerDTO(final TrainerRequestDTO trainerRequestDTO) {
         return new TrainerDTO(
                 trainerRequestDTO.getSpecialization(),

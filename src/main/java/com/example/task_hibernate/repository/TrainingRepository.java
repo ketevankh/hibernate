@@ -6,6 +6,7 @@ import com.example.task_hibernate.model.Training;
 import com.example.task_hibernate.model.TrainingType;
 import com.example.task_hibernate.model.enums.ExerciseType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -36,12 +37,11 @@ public interface TrainingRepository extends JpaRepository<Training, Long> {
     @Query("SELECT t FROM Training t " +
             "JOIN t.trainee.user u " +
             "LEFT JOIN t.trainer.user trainerU " +
-            "LEFT JOIN t.trainingType tt " +
             "WHERE u.userName = :username " +
             "AND (:fromDate IS NULL OR t.trainingDate >= :fromDate) " +
             "AND (:toDate IS NULL OR t.trainingDate <= :toDate) " +
             "AND (:trainerName IS NULL OR trainerU.userName = :trainerName) " +
-            "AND (:trainingType IS NULL OR tt.trainingType = :trainingType)")
+            "AND (:trainingType IS NULL OR t.trainingType = :trainingType)")
     List<Training> findByTraineeUsernameAndCriteria(
             @Param("username") String username,
             @Param("fromDate") Date fromDate,
@@ -64,9 +64,10 @@ public interface TrainingRepository extends JpaRepository<Training, Long> {
             @Param("traineeName") String traineeName
     );
 
-    @Query("DELETE FROM Training t " +
-            "WHERE t.trainee.user.userName = :traineeUsername " +
-            "AND t.trainer.user.userName IN :trainerUsernames")
-    Boolean deleteTraineesTrainingsWithTrainers(@Param("traineeUsername") String traineeUsername, @Param("trainerUsernames") List<String> trainerUsernames);
-
+    @Modifying
+    @Query(value = "DELETE FROM trainings t " +
+            "WHERE t.trainee_id IN (SELECT tr.id FROM trainees tr JOIN users utr ON tr.user_id = utr.id WHERE utr.user_name = :traineeUsername) " +
+            "AND t.trainer_id IN (SELECT tn.id FROM trainers tn JOIN users utn ON tn.user_id = utn.id WHERE utn.user_name IN :trainerUsernames)",
+            nativeQuery = true)
+    void deleteByTraineeUserUserNameAndTrainerUserUserNameIn(String traineeUsername, List<String> trainerUsernames);
 }

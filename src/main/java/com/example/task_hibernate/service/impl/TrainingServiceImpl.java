@@ -1,5 +1,6 @@
 package com.example.task_hibernate.service.impl;
 
+import com.example.task_hibernate.exceptions.ResourceNotFoundException;
 import com.example.task_hibernate.model.Trainee;
 import com.example.task_hibernate.model.Trainer;
 import com.example.task_hibernate.model.Training;
@@ -23,6 +24,7 @@ import java.util.Optional;
 @Transactional
 @RequiredArgsConstructor
 public class TrainingServiceImpl implements TrainingService {
+
     private final TrainingRepository trainingRepository;
     private final TraineeRepository traineeRepository;
     private final TrainerRepository trainerRepository;
@@ -37,8 +39,8 @@ public class TrainingServiceImpl implements TrainingService {
     }
 
     @Override
-    public List<Training> getTraineeTrainingsList(String traineeUsername, Date fromDate, Date toDate, String trainerName, ExerciseType trainingType) {
-        return trainingRepository.findByTraineeUsernameAndCriteria(traineeUsername, fromDate, toDate, trainerName, trainingType);
+    public List<Training> getTraineeTrainingsList(String traineeUsername, Date fromDate, Date toDate, String trainerName, String trainingType) {
+        return trainingRepository.findByTraineeUsernameAndCriteria(traineeUsername, fromDate, toDate, trainerName, trainingType != null ? ExerciseType.valueOf(trainingType) : null);
     }
 
     @Override
@@ -47,44 +49,26 @@ public class TrainingServiceImpl implements TrainingService {
     }
 
     @Override
-    public Optional<Training> createTraining(Training training) {
-        if (training.getTrainingType() == null) {
-            log.error("Training type is required");
-            return Optional.empty();
-        }
-        if (training.getTrainingDate() == null) {
-            log.error("Training date is required");
-            return Optional.empty();
-        }
-        if (training.getTrainee() == null) {
-            log.error("Trainee is required");
-            return Optional.empty();
-        }
-        if (training.getTrainer() == null) {
-            log.error("Trainer is required");
-            return Optional.empty();
-        }
-        return Optional.of(trainingRepository.save(training));
-    }
-
-    @Override
     public Boolean addTraining(String traineeUserName, String trainerUserName, String trainingName, Date trainingDate, int trainingDuration) {
         Optional<Trainee> trainee = traineeRepository.findByUser_UserName(traineeUserName);
         if (trainee.isEmpty()) {
             log.error("Trainee with username {} not found", traineeUserName);
-            return false;
+            throw new ResourceNotFoundException("Trainee with username " + traineeUserName + " not found");
         }
+
         Optional<Trainer> trainer = trainerRepository.findByUser_UserName(trainerUserName);
         if (trainer.isEmpty()) {
             log.error("Trainer with username {} not found", trainerUserName);
-            return false;
+            throw new ResourceNotFoundException("Trainer with username " + trainerUserName + " not found");
         }
+
         Training training = new Training();
         training.setTrainee(trainee.get());
         training.setTrainer(trainer.get());
         training.setTrainingName(trainingName);
         training.setTrainingDate(trainingDate);
         training.setDuration(trainingDuration);
+        training.setTrainingType(trainer.get().getTrainingType());
         trainingRepository.save(training);
         return true;
     }
@@ -101,7 +85,8 @@ public class TrainingServiceImpl implements TrainingService {
 
     @Override
     public Boolean deleteTrainingsWithTrainers(String traineeUsername, List<String> trainerUsernames) {
-        return trainingRepository.deleteTraineesTrainingsWithTrainers(traineeUsername, trainerUsernames);
+        trainingRepository.deleteByTraineeUserUserNameAndTrainerUserUserNameIn(traineeUsername, trainerUsernames);
+        return true;
     }
 
     @Override

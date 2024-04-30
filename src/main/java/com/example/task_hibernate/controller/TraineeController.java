@@ -1,8 +1,5 @@
 package com.example.task_hibernate.controller;
 
-import com.example.task_hibernate.mapper.TraineeMapper;
-import com.example.task_hibernate.mapper.TrainerMapper;
-import com.example.task_hibernate.mapper.TrainingMapper;
 import com.example.task_hibernate.model.Trainee;
 import com.example.task_hibernate.model.Trainer;
 import com.example.task_hibernate.model.Training;
@@ -12,10 +9,19 @@ import com.example.task_hibernate.model.dto.serviceDTOs.TraineeDTO;
 import com.example.task_hibernate.model.dto.controllerDTOs.response.TraineeResponseDTO;
 import com.example.task_hibernate.model.dto.controllerDTOs.response.TrainerDTOForList;
 import com.example.task_hibernate.model.dto.controllerDTOs.request.TraineeRequestDTO;
+import com.example.task_hibernate.repository.mapper.TraineeMappingRepository;
+import com.example.task_hibernate.repository.mapper.TrainerMappingRepository;
+import com.example.task_hibernate.repository.mapper.TrainingMappingRepository;
 import com.example.task_hibernate.service.TraineeService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
@@ -24,100 +30,135 @@ import java.util.List;
 @RestController
 @RequestMapping("/trainees")
 @RequiredArgsConstructor
+@Validated
 public class TraineeController {
 
     private final TraineeService traineeService;
-    private final TraineeMapper traineeMapper;
+    private final TraineeMappingRepository traineeMapper;
 
-    @PostMapping(path = "/register")
-    public ResponseEntity<Credentials> registerTrainee(@RequestBody final TraineeRequestDTO traineeRequestDTO) {
+    @PostMapping
+    @Operation(summary = "register a new trainee")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Trainee registered successfully",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "400", description = "Validation error"),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials")
+    })
+    public ResponseEntity<Credentials> registerTrainee(@Valid @RequestBody final TraineeRequestDTO traineeRequestDTO) {
         TraineeDTO traineeDTO = traineeMapper.traineeRequestDTOToTraineeDTO(traineeRequestDTO);
         Trainee trainee = traineeService.createTrainee(traineeDTO);
         Credentials credentials = new Credentials(trainee.getUser().getUserName(), trainee.getUser().getPassword());
         return ResponseEntity.ok(credentials);
     }
-    @GetMapping(path = "/{userNameToFind}")
-    public ResponseEntity<TraineeResponseDTO> getTraineeByUseName(@PathVariable final String userNameToFind, @RequestHeader final String userName, @RequestHeader final String password) {
+
+
+    @GetMapping(path = "/{username}")
+    @Operation(summary = "get trainee by username")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Trainee found",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "400", description = "Validation error"),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials")
+    })
+    public ResponseEntity<TraineeResponseDTO> getTraineeByUsername(@Valid @PathVariable final String username, @RequestHeader final String userName, @RequestHeader final String password) {
         Credentials credentials = new Credentials(userName, password);
-        Trainee trainee = traineeService.getTraineeByUserName(userNameToFind, credentials).orElse(null);
-        if (trainee == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        List<Trainer> trainers = traineeService.getTrainers(userNameToFind, credentials);
+        Trainee trainee = traineeService.getTraineeByUsername(username, credentials).orElse(null);
+        List<Trainer> trainers = traineeService.getTrainers(username, credentials);
         return ResponseEntity.ok(traineeMapper.traineeToTraineeResponseDTO(trainee, trainers));
     }
+
+
     @GetMapping(path = "/{userName}/trainings")
+    @Operation(summary = "Get trainings for a trainee")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Trainings found",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = TrainingTraineeResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials")
+    })
     public ResponseEntity<List<TrainingTraineeResponseDTO>> getTrainings(@PathVariable final String userName,
-                                                                         @RequestParam final Date from,
-                                                                         @RequestParam final Date to,
-                                                                         @RequestParam final String trainerUserName,
-                                                                         @RequestParam final String trainingType,
+                                                                         @RequestParam(required = false) final Date from,
+                                                                         @RequestParam(required = false) final Date to,
+                                                                         @RequestParam(required = false) final String trainerUserName,
+                                                                         @RequestParam(required = false) final String trainingType,
                                                                          @RequestHeader final String password) {
         Credentials credentials = new Credentials(userName, password);
-        Trainee trainee = traineeService.getTraineeByUserName(userName, credentials).orElse(null);
-        if (trainee == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
         List<Training> trainings = traineeService.getTrainings(userName, from, to, trainerUserName, trainingType, credentials);
-        return ResponseEntity.ok(TrainingMapper.TrainingListToTrainingTraineeResponseDTOList(trainings));
+        return ResponseEntity.ok(TrainingMappingRepository.TrainingListToTrainingTraineeResponseDTOList(trainings));
     }
 
-    @GetMapping(path = "/{userName}/activeTrainersNotAssigned")
+    @GetMapping(path = "/{userName}/NotAssignedTrainers")
+    @Operation(summary = "Get active trainers who aren't assigned to trainee")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Trainers found",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = TrainingTraineeResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials")
+    })
     public ResponseEntity<List<TrainerDTOForList>> getActiveTrainersNotAssignedTo(@PathVariable final String userName, @RequestHeader final String password) {
         Credentials credentials = new Credentials(userName, password);
-        Trainee trainee = traineeService.getTraineeByUserName(userName, credentials).orElse(null);
-        if (trainee == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
         List<Trainer> trainers = traineeService.getActiveTrainersNotAssignedTo(userName, credentials);
-        return ResponseEntity.ok(TrainerMapper.trainerListToTrainerDTOForList(trainers));
+        return ResponseEntity.ok(TrainerMappingRepository.trainerListToTrainerDTOForList(trainers));
     }
 
-    @PutMapping(path = "/updateTrainee")
-    public ResponseEntity<TraineeResponseDTO> updateTrainee(@RequestBody final TraineeRequestDTO traineeRequestDTO, @RequestHeader final String userName, @RequestHeader final String password) {
+    @PutMapping
+    @Operation(summary = "Update trainee")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Trainee updated",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = TrainingTraineeResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Validation error"),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials"),
+            @ApiResponse(responseCode = "500", description = "Trainee update failed")
+    })
+    public ResponseEntity<TraineeResponseDTO> updateTrainee(@Valid @RequestBody final TraineeRequestDTO traineeRequestDTO,
+                                                            @RequestHeader final String userName,
+                                                            @RequestHeader final String password) {
         Credentials credentials = new Credentials(userName, password);
         TraineeDTO traineeDTO = traineeMapper.traineeRequestDTOToTraineeDTO(traineeRequestDTO);
         Trainee trainee = traineeService.updateTrainee(traineeDTO, credentials).orElse(null);
-        if (trainee == null) {
-            return ResponseEntity.notFound().build();
-        }
         List<Trainer> trainers = traineeService.getTrainers(trainee.getUser().getUserName(), credentials);
         return ResponseEntity.ok(traineeMapper.traineeToTraineeResponseDTO(trainee, trainers));
     }
 
-    @DeleteMapping(path = "/deleteTrainee")
+    @DeleteMapping
+    @Operation(summary = "Delete trainee")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Trainee deleted"),
+            @ApiResponse(responseCode = "404", description = "Trainee not found"),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials")
+    })
     public ResponseEntity<Void> deleteTrainee(@RequestParam final String userNameToDelete, @RequestHeader final String userName, @RequestHeader final String password) {
         Credentials credentials = new Credentials(userName, password);
-        if (!traineeService.deleteTrainee(userNameToDelete, credentials)) {
-            return ResponseEntity.notFound().build();
-        }
+        traineeService.deleteTrainee(userNameToDelete, credentials);
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping(path = "/{userName}/updateTrainersList")
+    @PutMapping(path = "/{userName}/TrainersList")
+    @Operation(summary = "Update trainers list")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Trainers list updated",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = TrainingTraineeResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials")
+    })
     public ResponseEntity<List<TrainerDTOForList>> updateTrainersList(@PathVariable final String userName, @RequestHeader final String password, @RequestBody final List<String> trainersUserNames) {
-        ResponseEntity<List<TrainerDTOForList>> updatedTrainers;
         Credentials credentials = new Credentials(userName, password);
-        if (traineeService.getTraineeByUserName(userName, credentials).isEmpty()) {
-            updatedTrainers = ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        } else {
-            List<Trainer> result = traineeService.updateTrainersList(userName, trainersUserNames, credentials);
-            updatedTrainers = ResponseEntity.ok(TrainerMapper.trainerListToTrainerDTOForList(result));
-        }
-        return updatedTrainers;
+        List<Trainer> result = traineeService.updateTrainersList(userName, trainersUserNames, credentials);
+        return ResponseEntity.ok(TrainerMappingRepository.trainerListToTrainerDTOForList(result));
     }
 
-    @PatchMapping(path = "/{userName}/activate-deactivate")
-    public ResponseEntity<Void> activateDeactivate(@PathVariable final String userName, @RequestParam final Boolean isActive, @RequestHeader final String password) {
+    @PatchMapping(path = "/{userName}/activeStatus")
+    @Operation(summary = "Activate or deactivate trainee")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "active status changed"),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials")
+    })
+    public ResponseEntity<Void> activateDeactivate(@PathVariable final String userName,
+                                                   @RequestParam final Boolean isActive,
+                                                   @RequestHeader final String password) {
         Credentials credentials = new Credentials(userName, password);
-        if (traineeService.getTraineeByUserName(userName, credentials).isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
         traineeService.changeActiveStatus(isActive, credentials);
-        if (isActive) {
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.ok().build();
     }
 }

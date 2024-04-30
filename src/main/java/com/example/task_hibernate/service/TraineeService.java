@@ -19,7 +19,7 @@ public interface TraineeService {
 
     Optional<Trainee> getTraineeById(Long id, Credentials credentials);
 
-    Optional<Trainee> getTraineeByUserName(String userName, Credentials credentials);
+    Optional<Trainee> getTraineeByUsername(String userName, Credentials credentials);
 
     boolean changeTraineePassword(String password, Credentials credentials);
 

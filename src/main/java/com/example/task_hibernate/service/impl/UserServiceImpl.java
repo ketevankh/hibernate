@@ -1,5 +1,7 @@
 package com.example.task_hibernate.service.impl;
 
+import com.example.task_hibernate.exceptions.AuthenticationFailedException;
+import com.example.task_hibernate.exceptions.ResourceNotFoundException;
 import com.example.task_hibernate.model.dto.Credentials;
 import com.example.task_hibernate.model.User;
 import com.example.task_hibernate.model.dto.serviceDTOs.UserDTO;
@@ -51,15 +53,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean changeUserPassword(String password, String userName) {
-        Optional<User> user = userRepository.findByUserName(userName);
-        if (user.isEmpty()) {
-            log.error("User with username {} not found", userName);
-            return false;
-        }
-        User updateUser = user.get();
+    public boolean changeUserPassword(String password, String username) {
+        User updateUser = findByUsername(username);
         if (updateUser.getPassword().equals(password)) {
-            log.error("User with username {} is already using the password", userName);
+            log.info("User with username {} is already using the password", username);
             return false;
         }
         updateUser.setPassword(password);
@@ -69,12 +66,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Optional<User> updateUser(Long id, UserDTO userDTO) {
-        Optional<User> user = userRepository.findById(id);
-        if (!user.isPresent()) {
-            log.error("User with id {} not found", id);
-            return Optional.empty();
-        }
-        User updateUser = user.get();
+        User updateUser = findById(id);
         updateUser.setFirstName(userDTO.getFirstName());
         updateUser.setLastName(userDTO.getLastName());
         updateUser.setIsActive(userDTO.getIsActive());
@@ -82,14 +74,9 @@ public class UserServiceImpl implements UserService {
     }
 
     public boolean changeActiveStatus(Long id, Boolean isActive) {
-        Optional<User> user = userRepository.findById(id);
-        if (!user.isPresent()) {
-            log.error("User with id {} not found", id);
-            return false;
-        }
-        User updateUser = user.get();
+        User updateUser = findById(id);
         if (updateUser.getIsActive().equals(isActive)) {
-            log.error("User with id {} is already {}", id, isActive ? "active" : "inactive");
+            log.info("User with id {} is already {}", id, isActive ? "active" : "inactive");
             return false;
         }
         updateUser.setIsActive(isActive);
@@ -102,9 +89,16 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteById(id);
     }
 
-    public boolean validateUserFailed(Credentials credentials) {
+    public boolean validateUserCredentials(Credentials credentials) {
         Optional<User> user = userRepository.findByUserName(credentials.userName());
-        return !user.isPresent() || !user.get().getPassword().equals(credentials.password());
+        if (!user.isPresent()) {
+            log.error("Invalid username");
+            throw new AuthenticationFailedException("Invalid username");
+        } else if(!user.get().getPassword().equals(credentials.password())) {
+            log.error("Invalid password");
+            throw new AuthenticationFailedException("Invalid password");
+        }
+        return true;
     }
 
     @Override
@@ -127,6 +121,24 @@ public class UserServiceImpl implements UserService {
 
     private boolean isUniqueUserName(String userName) {
         return userRepository.findByUserName(userName).isEmpty();
+    }
+
+    private User findByUsername(String userName) {
+        Optional<User> user = userRepository.findByUserName(userName);
+        if (user.isEmpty()) {
+            log.error("User with username {} not found", userName);
+            throw new ResourceNotFoundException("User with username " + userName + " not found");
+        }
+        return user.get();
+    }
+
+    private User findById(Long id) {
+        Optional<User> user = userRepository.findById(id);
+        if (user.isEmpty()) {
+            log.error("User with id {} not found", id);
+            throw new ResourceNotFoundException("User with id " + id + " not found");
+        }
+        return user.get();
     }
 
 }

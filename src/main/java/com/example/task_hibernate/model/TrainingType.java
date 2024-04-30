@@ -19,4 +19,13 @@ public class TrainingType {
     @Column(nullable = false, unique = true)
     @Enumerated(EnumType.STRING)
     private ExerciseType trainingType;
+
+    public TrainingType(Long id) {
+        this.id = id;
+        if (id >= 0 && id < ExerciseType.values().length) {
+            this.trainingType = ExerciseType.values()[(int) (long) id];
+        } else {
+            throw new IllegalArgumentException("Invalid id for ExerciseType: " + id);
+        }
+    }
 }

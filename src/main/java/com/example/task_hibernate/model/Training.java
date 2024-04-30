@@ -8,7 +8,7 @@ import java.util.Date;
 import java.util.Set;
 
 @Entity
-@Table
+@Table(name = "trainings")
 @Data
 @NoArgsConstructor
 public class Training {
@@ -22,7 +22,7 @@ public class Training {
     @ManyToOne
     private Trainer trainer;
 
-    @ManyToOne
+    @ManyToOne()
     private TrainingType trainingType;
 
     @Column(nullable = false)

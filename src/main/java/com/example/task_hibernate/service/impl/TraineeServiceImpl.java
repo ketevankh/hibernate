@@ -1,5 +1,7 @@
 package com.example.task_hibernate.service.impl;
 
+import com.example.task_hibernate.exceptions.ResourceNotFoundException;
+import com.example.task_hibernate.exceptions.UpdateFailedException;
 import com.example.task_hibernate.model.Trainee;
 import com.example.task_hibernate.model.Trainer;
 import com.example.task_hibernate.model.Training;
@@ -24,99 +26,81 @@ import java.util.*;
 @Transactional
 @RequiredArgsConstructor
 public class TraineeServiceImpl implements TraineeService {
+
     private final TraineeRepository traineeRepository;
+
     private final UserService userService;
     private final TrainingService trainingService;
-
     private final TrainerService trainerService;
 
     @Override
     public Trainee createTrainee(TraineeDTO traineeDTO) {
         User user = userService.createUser(traineeDTO.getUser());
+
         Trainee trainee = new Trainee();
         trainee.setAddress(traineeDTO.getAddress());
         trainee.setDateOfBirth(traineeDTO.getDateOfBirth());
         trainee.setUser(user);
+
         return traineeRepository.save(trainee);
     }
 
     @Override
     public List<Trainee> getAllTrainees(Credentials credentials) {
-        if (userService.validateUserFailed(credentials)) {
-            log.error("Invalid credentials");
-            return Collections.emptyList();
-        }
+        userService.validateUserCredentials(credentials);
         return traineeRepository.findAll();
     }
 
     @Override
     public Optional<Trainee> getTraineeById(Long id, Credentials credentials) {
-        if (userService.validateUserFailed(credentials)) {
-            log.error("Invalid credentials");
-            return Optional.empty();
-        }
+        userService.validateUserCredentials(credentials);
         return traineeRepository.findById(id);
     }
 
     @Override
-    public Optional<Trainee> getTraineeByUserName(String userName, Credentials credentials) {
-        if (userService.validateUserFailed(credentials)) {
-            log.error("Invalid credentials");
-            return Optional.empty();
-        }
+    public Optional<Trainee> getTraineeByUsername(String userName, Credentials credentials) {
+        userService.validateUserCredentials(credentials);
         return traineeRepository.findByUser_UserName(userName);
     }
 
     @Override
     public boolean changeTraineePassword(String password, Credentials credentials) {
-        if (userService.validateUserFailed(credentials)) {
-            log.error("Invalid credentials");
-            return false;
-        }
+        userService.validateUserCredentials(credentials);
         return userService.changeUserPassword(credentials.userName(), password);
     }
 
     @Override
     public Optional<Trainee> updateTrainee(TraineeDTO trainee, Credentials credentials) {
-        if (userService.validateUserFailed(credentials)) {
-            log.error("Invalid credentials");
-            return Optional.empty();
-        }
-        Trainee tmpTrainee = traineeRepository.findByUser_UserName(credentials.userName()).get();
+        userService.validateUserCredentials(credentials);
 
+        Trainee tmpTrainee = traineeRepository.findByUser_UserName(credentials.userName()).get();
         Optional<User> updatedUser = userService.updateUser(tmpTrainee.getUser().getId(), trainee.getUser());
-        if (updatedUser.isEmpty()) {
-            log.error("user update failed");
-            return Optional.empty();
+        if (!updatedUser.isPresent()) {
+            log.error("User update failed");
+            throw new UpdateFailedException("User update failed");
         }
 
         tmpTrainee.setAddress(trainee.getAddress());
         tmpTrainee.setDateOfBirth(trainee.getDateOfBirth());
         tmpTrainee.setUser(updatedUser.get());
+
         return Optional.of(traineeRepository.save(tmpTrainee));
     }
 
     @Override
     public boolean changeActiveStatus(Boolean isActive, Credentials credentials) {
-        if (userService.validateUserFailed(credentials)) {
-            log.error("Invalid credentials");
-            return false;
-        }
+        userService.validateUserCredentials(credentials);
         Trainee trainee = traineeRepository.findByUser_UserName(credentials.userName()).get();
         return userService.changeActiveStatus(trainee.getUser().getId(), isActive);
     }
 
     @Override
     public boolean deleteTrainee(String userName, Credentials credentials) {
+        userService.validateUserCredentials(credentials);
 
-        //FIXME Best practice is to have only one return statement
         boolean traineeDeleted = false;
 
-        if (userService.validateUserFailed(credentials)) { //FIXME 'validateUserFailed' would be better to move to Validator which will be called from controller and all typical actions like 'log.error("Invalid credentials")' must be a part of validator method implementation
-            log.error("Invalid credentials");
-        } else if (traineeRepository.findByUser_UserName(userName).isEmpty()) {
-            log.error("Trainee with username {} not found", userName);
-        } else {
+        if (findTraineeByUsername(userName)) {
             traineeRepository.deleteByUser_UserName(userName);
             traineeDeleted = true;
         }
@@ -125,28 +109,25 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     public List<Trainer> getTrainers(String userName, Credentials credentials) {
-        if (userService.validateUserFailed(credentials)) {
-            log.error("Invalid credentials");
-            return Collections.emptyList();
-        }
-        Optional<Trainee> trainee = traineeRepository.findByUser_UserName(userName);
-        if (!trainee.isPresent()) {
-            log.error("Trainee with username {} not found, userName)", userName);
-            return Collections.emptyList();
-        }
+        userService.validateUserCredentials(credentials);
+        findTraineeByUsername(userName);
         return trainingService.getTrainersOfTrainee(userName);
     }
 
     @Override
     public List<Trainer> getActiveTrainersNotAssignedTo(String userName, Credentials credentials) {
+        userService.validateUserCredentials(credentials);
+
         List<Trainer> allTrainers = trainerService.getAllTrainers(credentials);
-        if(allTrainers.isEmpty()) {
-            log.error("Invalid credentials");
+        List<Trainer> assignedTrainers = getTrainers(userName, credentials);
+
+        if (allTrainers.isEmpty()) {
+            log.info("No trainers found in the system");
             return Collections.emptyList();
         }
-        List<Trainer> asssignedTrainers = getTrainers(userName, credentials);
-        if (!asssignedTrainers.isEmpty()) {
-            for (Trainer trainer : asssignedTrainers) {
+
+        if (!assignedTrainers.isEmpty()) {
+            for (Trainer trainer : assignedTrainers) {
                 if (trainer.getUser().getIsActive()) {
                     allTrainers.remove(trainer);
                 }
@@ -155,32 +136,27 @@ public class TraineeServiceImpl implements TraineeService {
         return allTrainers;
     }
 
+
+    /*
+     * Removes all the trainings of trainee with trainers who is not included in the trainerUsernames parameter
+     */
     @Override
     public List<Trainer> updateTrainersList(String userName, List<String> trainerUsernames, Credentials credentials) {
-        if (userService.validateUserFailed(credentials)) {
-            log.error("Invalid credentials");
-            return Collections.emptyList();
-        }
-        Optional<Trainee> trainee = traineeRepository.findByUser_UserName(userName);
-        if (!trainee.isPresent()) {
-            log.error("Trainee with username {} not found", userName);
-            return Collections.emptyList();
-        }
+        userService.validateUserCredentials(credentials);
+        findTraineeByUsername(userName);
+
         List<Trainer> tmpTrainers = trainingService.getTrainersOfTrainee(userName);
         List<String> toRemove = new ArrayList<>();
+
         if (tmpTrainers.isEmpty()) {
-            log.info("No Trainings with Trainers found, add training first");
-            return Collections.emptyList();
-        }
-        if (trainerUsernames.isEmpty()) {
+            log.warn("No Trainings with Trainers found, add training first");
+        } else if (trainerUsernames.isEmpty()) {
             log.info("All trainers and trainings are deleted for user: {}", userName);
             toRemove = tmpTrainers.stream().map(trainer -> trainer.getUser().getUserName()).toList();
         } else {
             for (Trainer trainer : tmpTrainers) {
                 if (!trainerUsernames.contains(trainer.getUser().getUserName())) {
                     toRemove.add(trainer.getUser().getUserName());
-                } else {
-                    log.info("No Trainings with Trainer: {} found, add training first", trainer.getUser().getUserName());
                 }
             }
         }
@@ -194,16 +170,20 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     public List<Training> getTrainings(String userName, Date from, Date to, String trainerUserName, String trainingType, Credentials credentials) {
-        if (userService.validateUserFailed(credentials)) {
-            log.error("Invalid credentials");
-            return Collections.emptyList(); //FIXME Returning the immutable sheet is not always justified
+        userService.validateUserCredentials(credentials);
+        findTraineeByUsername(userName);
+        List<Training> traineeTrainingsList = trainingService.getTraineeTrainingsList(userName, from, to, trainerUserName,
+                trainingType);
+        return traineeTrainingsList;
+    }
+
+    private Boolean findTraineeByUsername(String username) {
+        Optional<Trainee> trainee = traineeRepository.findByUser_UserName(username);
+        if (!trainee.isPresent()) {
+            log.error("Trainee with username {} not found, userName)", username);
+            throw new ResourceNotFoundException("Trainee with username " + username + " not found");
         }
-        Optional<Trainee> trainee = traineeRepository.findByUser_UserName(userName);
-        if (trainee.isEmpty()) {
-            log.error("Trainee with username {} not found", userName); //FIXME usually we have error logs only when we catch or throw some exceptions, here WARN or INFO would be better
-            return Collections.emptyList();
-        }
-        return trainingService.getTraineeTrainingsList(userName, from, to, trainerUserName, ExerciseType.valueOf(trainingType));
+        return traineeRepository.findByUser_UserName(username).isPresent();
     }
 
 }

@@ -11,23 +11,23 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TrainingService {
+
     List<Training> getAllTrainings();
 
     List<TrainingType> getAllTrainingTypes();
 
-
     Optional<Training> getTrainingById(Long id);
 
-    List<Training> getTraineeTrainingsList(String traineeUsername, Date fromDate, Date toDate, String trainerName, ExerciseType trainingType);
+    List<Training> getTraineeTrainingsList(String traineeUsername, Date fromDate, Date toDate, String trainerName, String trainingType);
 
     List<Training> getTrainerTrainingsList(String trainerUsername, Date fromDate, Date toDate, String traineeName);
-
-    Optional<Training> createTraining(Training training);
 
     Boolean addTraining(String traineeUserName, String trainerUserName, String trainingName, Date trainingDate, int trainingDuration);
 
     List<Trainer> getTrainersOfTrainee(String traineeUsername);
 
     List<Trainee> getTraineesOfTrainer(String trainerUsername);
+
     Boolean deleteTrainingsWithTrainers(String traineeUsername, List<String> trainerUsernames);
+
 }

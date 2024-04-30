@@ -1,14 +1,16 @@
-package com.example.task_hibernate.mapper;
+package com.example.task_hibernate.repository.mapper;
 
 import com.example.task_hibernate.model.Training;
 import com.example.task_hibernate.model.dto.controllerDTOs.response.TrainingTraineeResponseDTO;
 import com.example.task_hibernate.model.dto.controllerDTOs.response.TrainingTrainerResponseDTO;
+import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class TrainingMapper {
-    public static List<TrainingTraineeResponseDTO>TrainingListToTrainingTraineeResponseDTOList(List<Training> trainings)  {
+@Repository
+public class TrainingMappingRepository {
+    public static List<TrainingTraineeResponseDTO> TrainingListToTrainingTraineeResponseDTOList(List<Training> trainings)  {
         List<TrainingTraineeResponseDTO> result = new ArrayList<>();
         for (Training training : trainings) {
             result.add(new TrainingTraineeResponseDTO(training.getTrainingName(), training.getTrainingType().getTrainingType().name(),

@@ -1,16 +1,16 @@
 package com.example.task_hibernate.aspect;
 
+import com.example.task_hibernate.util.IdentityHolder;
+import jakarta.xml.bind.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
-
-//FIXME I didn't find required logging - 17. Two levels of logging
-//You can try to implement something using the example below
 
 @Aspect
 @Slf4j(topic = "info")
@@ -34,24 +34,31 @@ public class AspectLogger {
         Object proceed;
 
         try {
-            String requestIdentity = ""; //FIXME create some class or method  IdentityHolder.getIdentity();
+            String requestIdentity = IdentityHolder.getIdentity();
             String className = joinPoint.getSignature().getDeclaringType().getSimpleName();
             String methodName = joinPoint.getSignature().getName();
             Object[] args = joinPoint.getArgs();
-            long startTimeMillis = System.currentTimeMillis();
 
-            log.info("{} - Start executing: {}.{}({})", requestIdentity, className, methodName, Arrays.toString(args));
+            long startTimeMillis = System.currentTimeMillis();
+            log.info("{} - Start REST Call: {}.{}({})", requestIdentity, className, methodName, Arrays.toString(args));
+
             proceed = joinPoint.proceed();
             long executionTime = System.currentTimeMillis() - startTimeMillis;
-            log.info("{} - {}.{} finished by: {} ms. With result: {}", requestIdentity, className, methodName, executionTime, proceed == null ? "null" : proceed.toString());
-
-        } catch (Exception controllableException) { //FIXME here can be specifies some special exception
-            log.error(controllableException.getMessage());
-            throw controllableException;
+            log.info("{} - {}.{} finished REST Call by: {} ms. With result: {}", requestIdentity, className, methodName, executionTime, proceed == null ? "null" : proceed.toString());
+        } catch (DataAccessException ex) {
+            log.error("Database access error occurred: {}", ex.getMessage());
+            throw ex;
+        } catch (ValidationException ex) {
+            log.error("Validation error occurred: {}", ex.getMessage());
+            throw ex;
         } catch (Throwable throwable) {
-            log.error(throwable.getMessage(), throwable);
+            log.error("Throwable occurred: {}", throwable.getMessage(), throwable);
             throw throwable;
+        }
+        finally {
+            IdentityHolder.clearIdentity();
         }
         return proceed;
     }
+
 }

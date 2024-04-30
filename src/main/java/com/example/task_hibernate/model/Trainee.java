@@ -18,14 +18,13 @@ public class Trainee {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Nullable
+    @Column(nullable = true)
     private String address;
 
-    @Column()
-    @Nullable
+    @Column(nullable = true)
     private Date dateOfBirth;
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn
+    @JoinColumn(nullable = false)
     private User user;
 }

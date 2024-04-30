@@ -1,17 +1,23 @@
 package com.example.task_hibernate.controller;
 
-import com.example.task_hibernate.mapper.TrainerMapper;
-import com.example.task_hibernate.mapper.TrainingMapper;
 import com.example.task_hibernate.model.Trainee;
 import com.example.task_hibernate.model.Trainer;
 import com.example.task_hibernate.model.Training;
+import com.example.task_hibernate.model.TrainingType;
 import com.example.task_hibernate.model.dto.Credentials;
 import com.example.task_hibernate.model.dto.controllerDTOs.request.TrainerRequestDTO;
 import com.example.task_hibernate.model.dto.controllerDTOs.response.TrainerResponseDTO;
 import com.example.task_hibernate.model.dto.controllerDTOs.response.TrainingTrainerResponseDTO;
 import com.example.task_hibernate.model.dto.serviceDTOs.TrainerDTO;
+import com.example.task_hibernate.model.dto.serviceDTOs.UserDTO;
+import com.example.task_hibernate.repository.mapper.TrainerMappingRepository;
+import com.example.task_hibernate.repository.mapper.TrainingMappingRepository;
 import com.example.task_hibernate.service.TrainerService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,53 +32,66 @@ import java.util.List;
 public class TrainerController {
 
     private final TrainerService trainerService;
-    private final TrainerMapper trainerMapper;
+    private final TrainerMappingRepository trainerMapper;
 
-
-    @GetMapping(path = "test")
-    public String test() {
-        return "Test";
-    }
-
-    //FIXME Error handling is missing
-    //FIXME Swagger 2 annotations are missing
-    @PostMapping(path = "/register") //FIXME Naming :(  https://restfulapi.net/resource-naming/   https://medium.com/@nadinCodeHat/rest-api-naming-conventions-and-best-practices-1c4e781eb6a5
-    @Operation(summary = "Register a new trainer")
-    public ResponseEntity<Credentials> registerTrainer(@RequestBody final TrainerDTO trainerDTO) {
+    @PostMapping
+    @Operation(summary = "register a new trainer")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Trainer registered successfully",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "400", description = "Validation error"),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials")
+    })
+    public ResponseEntity<Credentials> registerTrainer(
+            @RequestParam(required = true) final String firstName,
+            @RequestParam(required = true) final String lastName,
+            @RequestParam(required = true) final Long trainingTypeId) {
+        TrainerDTO trainerDTO = new TrainerDTO(new TrainingType(trainingTypeId), new UserDTO(firstName, lastName, true));
         Trainer trainer = trainerService.createTrainer(trainerDTO);
         Credentials credentials = new Credentials(trainer.getUser().getUserName(), trainer.getUser().getPassword());
         return ResponseEntity.ok(credentials);
     }
 
-    @GetMapping(path = "/{userNameToFind}")
-    public ResponseEntity<TrainerResponseDTO> getTrainerByUserName(@PathVariable final String userNameToFind, @RequestHeader final String userName, @RequestHeader final String password) {
-        Credentials credentials = new Credentials(userName, password);
-        Trainer trainer = trainerService.getTrainerByUserName(userNameToFind, credentials).orElse(null);
-        if (trainer == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        List<Trainee> trainees = trainerService.getTrainees(userNameToFind, credentials);
+    @GetMapping(path = "/{userName}")
+    @Operation(summary = "Get trainer by username")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Trainer found",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "400", description = "Validation error"),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials")
+    })
+    public ResponseEntity<TrainerResponseDTO> getTrainerByUserName(@PathVariable final String userName, @RequestHeader final String username, @RequestHeader final String password) {
+        Credentials credentials = new Credentials(username, password);
+        Trainer trainer = trainerService.getTrainerByUserName(userName, credentials).orElse(null);
+        List<Trainee> trainees = trainerService.getTrainees(userName, credentials);
         return ResponseEntity.ok(trainerMapper.trainerToTraineeResponseDTO(trainer, trainees));
     }
 
     @PatchMapping(path = "/{userName}/activate-deactivate")
+    @Operation(summary = "Activate or deactivate a trainer")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "active status changed"),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials"),
+            @ApiResponse(responseCode = "403", description = "Forbidden")
+    })
     public ResponseEntity<Void> activateDeactivate(@PathVariable final String userName, @RequestParam final Boolean isActive, @RequestHeader final String password) {
         Credentials credentials = new Credentials(userName, password);
-        if (trainerService.getTrainerByUserName(userName, credentials).isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
         trainerService.changeActiveStatus(isActive, credentials);
-        if (isActive) {
-            return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        return ResponseEntity.ok().build();
     }
 
-    @PutMapping(path = "/updateTrainer")
+    @PutMapping
+    @Operation(summary = "Update a trainer")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Trainer updated successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = TrainerResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials"),
+            @ApiResponse(responseCode = "404", description = "Trainer not found")
+    })
     public ResponseEntity<TrainerResponseDTO> updateTrainer(@RequestBody final TrainerRequestDTO trainerRequestDTO, @RequestHeader final String userName, @RequestHeader final String password) {
         Credentials credentials = new Credentials(userName, password);
-        TrainerDTO trainerDTO = trainerMapper.trainerRequestDTOToTrainerDTO(trainerRequestDTO); //FIXME Mapping must be a part of service or repository (usually last one is preferable)
+        TrainerDTO trainerDTO = trainerMapper.trainerRequestDTOToTrainerDTO(trainerRequestDTO);
         Trainer trainer = trainerService.updateTrainer(trainerDTO, credentials).orElse(null);
         if (trainer == null) {
             return ResponseEntity.notFound().build();
@@ -82,6 +101,13 @@ public class TrainerController {
     }
 
     @GetMapping(path = "/{userName}/trainings")
+    @Operation(summary = "Get trainings for a trainer")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Trainings found",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = TrainingTrainerResponseDTO.class))),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials")
+    })
     public ResponseEntity<List<TrainingTrainerResponseDTO>> getTrainings(@PathVariable final String userName,
                                                                          @RequestParam final Date from,
                                                                          @RequestParam final Date to,
@@ -94,6 +120,6 @@ public class TrainerController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         List<Training> trainings = trainerService.getTrainings(userName, from, to, trainerUserName, trainingType, credentials);
-        return ResponseEntity.ok(TrainingMapper.TrainingListToTrainingTrainerResponseDTOList(trainings));
+        return ResponseEntity.ok(TrainingMappingRepository.TrainingListToTrainingTrainerResponseDTOList(trainings));
     }
 }
