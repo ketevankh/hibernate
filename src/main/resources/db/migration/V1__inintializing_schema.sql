@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS USERS (
                                      id BIGINT AUTO_INCREMENT PRIMARY KEY,
                                      first_name VARCHAR(255) NOT NULL,
                                      last_name VARCHAR(255) NOT NULL,
-                                     user_name VARCHAR(255) NOT NULL UNIQUE,
+                                     username VARCHAR(255) NOT NULL UNIQUE,
                                      password VARCHAR(255) NOT NULL,
                                      is_active BOOLEAN NOT NULL
 );

@@ -73,14 +73,14 @@ class TrainingServiceImplTest {
     void createTraining() {
         Trainee trainee = new Trainee();
         User user = new User();
-        user.setUserName("traineeUsername");
+        user.setUsername("traineeUsername");
         trainee.setUser(user);
         trainee.setId(1L);
 
 
         Trainer trainer = new Trainer();
         User userTrainer = new User();
-        userTrainer.setUserName("trainerUsername");
+        userTrainer.setUsername("trainerUsername");
         trainer.setUser(userTrainer);
         trainer.setId(1L);
 
@@ -98,8 +98,8 @@ class TrainingServiceImplTest {
         verify(trainingRepository, times(1)).save(any(Training.class));
 
         assertNotNull(createdTraining);
-        assertEquals(trainee.getUser().getUserName(), createdTraining.getTrainee().getUser().getUserName());
-        assertEquals(trainer.getUser().getUserName(), createdTraining.getTrainer().getUser().getUserName());
+        assertEquals(trainee.getUser().getUsername(), createdTraining.getTrainee().getUser().getUsername());
+        assertEquals(trainer.getUser().getUsername(), createdTraining.getTrainer().getUser().getUsername());
         assertEquals(trainingType.getTrainingType(), createdTraining.getTrainingType().getTrainingType());
     }
 }

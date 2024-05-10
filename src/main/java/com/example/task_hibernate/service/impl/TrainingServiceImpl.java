@@ -50,13 +50,13 @@ public class TrainingServiceImpl implements TrainingService {
 
     @Override
     public Boolean addTraining(String traineeUserName, String trainerUserName, String trainingName, Date trainingDate, int trainingDuration) {
-        Optional<Trainee> trainee = traineeRepository.findByUser_UserName(traineeUserName);
+        Optional<Trainee> trainee = traineeRepository.findByUser_Username(traineeUserName);
         if (trainee.isEmpty()) {
             log.error("Trainee with username {} not found", traineeUserName);
             throw new ResourceNotFoundException("Trainee with username " + traineeUserName + " not found");
         }
 
-        Optional<Trainer> trainer = trainerRepository.findByUser_UserName(trainerUserName);
+        Optional<Trainer> trainer = trainerRepository.findByUser_Username(trainerUserName);
         if (trainer.isEmpty()) {
             log.error("Trainer with username {} not found", trainerUserName);
             throw new ResourceNotFoundException("Trainer with username " + trainerUserName + " not found");

@@ -22,13 +22,13 @@ public interface TrainingRepository extends JpaRepository<Training, Long> {
     @Query("SELECT DISTINCT t.trainer FROM Training t " +
             "JOIN t.trainee trainee " +
             "JOIN t.trainer trainer " +
-            "WHERE trainee.user.userName = :username")
+            "WHERE trainee.user.username = :username")
     List<Trainer> findTrainerByTraineeUsername(String username);
 
     @Query("SELECT DISTINCT t.trainer FROM Training t " +
             "JOIN t.trainee trainee " +
             "JOIN t.trainer trainer " +
-            "WHERE trainer.user.userName = :username")
+            "WHERE trainer.user.username = :username")
     List<Trainee> findTraineeByTrainerUsername(String username);
 
     @Query("SELECT tt FROM TrainingType tt")
@@ -37,10 +37,10 @@ public interface TrainingRepository extends JpaRepository<Training, Long> {
     @Query("SELECT t FROM Training t " +
             "JOIN t.trainee.user u " +
             "LEFT JOIN t.trainer.user trainerU " +
-            "WHERE u.userName = :username " +
+            "WHERE u.username = :username " +
             "AND (:fromDate IS NULL OR t.trainingDate >= :fromDate) " +
             "AND (:toDate IS NULL OR t.trainingDate <= :toDate) " +
-            "AND (:trainerName IS NULL OR trainerU.userName = :trainerName) " +
+            "AND (:trainerName IS NULL OR trainerU.username = :trainerName) " +
             "AND (:trainingType IS NULL OR t.trainingType = :trainingType)")
     List<Training> findByTraineeUsernameAndCriteria(
             @Param("username") String username,
@@ -53,10 +53,10 @@ public interface TrainingRepository extends JpaRepository<Training, Long> {
     @Query("SELECT t FROM Training t " +
             "JOIN t.trainer.user u " +
             "LEFT JOIN t.trainee.user traineeU " +
-            "WHERE u.userName = :trainerUsername " +
+            "WHERE u.username = :trainerUsername " +
             "AND (:fromDate IS NULL OR t.trainingDate >= :fromDate) " +
             "AND (:toDate IS NULL OR t.trainingDate <= :toDate) " +
-            "AND (:traineeName IS NULL OR traineeU.userName = :traineeName)")
+            "AND (:traineeName IS NULL OR traineeU.username = :traineeName)")
     List<Training> findByTrainerUsernameAndCriteria(
             @Param("trainerUsername") String trainerUsername,
             @Param("fromDate") Date fromDate,

@@ -17,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -54,7 +53,7 @@ public class TrainerServiceImpl implements TrainerService {
     @Override
     public Optional<Trainer> getTrainerByUserName(String userName, Credentials credentials) {
         userService.validateUserCredentials(credentials);
-        return trainerRepository.findByUser_UserName(userName);
+        return trainerRepository.findByUser_Username(userName);
     }
     @Override
     public boolean changeTrainerPassword(String password, Credentials credentials) {
@@ -66,7 +65,7 @@ public class TrainerServiceImpl implements TrainerService {
     public Optional<Trainer> updateTrainer(TrainerDTO trainer, Credentials credentials) {
         userService.validateUserCredentials(credentials);
 
-        Trainer tmpTrainer = trainerRepository.findByUser_UserName(credentials.userName()).get();
+        Trainer tmpTrainer = trainerRepository.findByUser_Username(credentials.userName()).get();
         Optional<User> updatedUser = userService.updateUser(tmpTrainer.getUser().getId(), trainer.getUser());
         if (!updatedUser.isPresent()) {
             log.error("User update failed");
@@ -81,7 +80,7 @@ public class TrainerServiceImpl implements TrainerService {
     @Override
     public boolean changeActiveStatus(Boolean isActive, Credentials credentials) {
         userService.validateUserCredentials(credentials);
-        Trainer trainer = trainerRepository.findByUser_UserName(credentials.userName()).get();
+        Trainer trainer = trainerRepository.findByUser_Username(credentials.userName()).get();
         return userService.changeActiveStatus(trainer.getUser().getId(), isActive);
     }
 
@@ -92,7 +91,7 @@ public class TrainerServiceImpl implements TrainerService {
         boolean trainerDeleted = false;
 
         if (findTrainerWithUsername(userName)) {
-            trainerRepository.deleteByUser_UserName(userName);
+            trainerRepository.deleteByUser_Username(userName);
             trainerDeleted = true;
         }
         return trainerDeleted;
@@ -113,11 +112,11 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     private Boolean findTrainerWithUsername(String username) {
-        Optional<Trainer> trainer = trainerRepository.findByUser_UserName(username);
+        Optional<Trainer> trainer = trainerRepository.findByUser_Username(username);
         if (!trainer.isPresent()) {
             log.error("Trainer with username {} not found, userName)", username);
             throw new ResourceNotFoundException("Trainer with username " + username + " not found");
         }
-        return trainerRepository.findByUser_UserName(username).isPresent();
+        return trainerRepository.findByUser_Username(username).isPresent();
     }
 }

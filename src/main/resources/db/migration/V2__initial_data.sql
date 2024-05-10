@@ -5,11 +5,11 @@ INSERT INTO training_types (id, training_type) VALUES (3, 'FLEXIBILITY');
 INSERT INTO training_types (id, training_type) VALUES (4, 'BALANCE');
 
 -- Inserting initial data for USERS table
-INSERT INTO USERS (first_name, last_name, user_name, password, is_active) VALUES
-                                                                              ('John', 'Doe', 'John.Doe', 'password123', true),
-                                                                              ('Alice', 'Smith', 'Alice.Smith', 'abc123', true),
-                                                                              ('Bob', 'Johnson', 'Bob.Johnson', 'def456', true),
-                                                                              ('Charlie', 'Brown', 'Charlie.Brown', 'ghi789', true);
+INSERT INTO USERS (first_name, last_name, username, password, is_active) VALUES
+                                                                              ('John', 'Doe', 'John.Doe', '$2a$12$ob2GhzfnEoEJbJISrSnxdOkYy5G65mKPf3SlCE84MxF/OxmvlP5N2', true),     #pssword =  0123456789
+                                                                              ('Alice', 'Smith', 'Alice.Smith', '$2a$12$fWkvKFKUvmWVmddcMUxftOyYDxjHcTGRMUGSQOOEnWBg1bwhBOkG.', true),    #password = plaintext!
+                                                                              ('Bob', 'Johnson', 'Bob.Johnson', '$2a$12$BAYOfCg3UZAg3cRqRk0gQuFyJry5h1gNYfIjYCJa5qf31wKgnlG6u', true),    #password = storedwith
+                                                                              ('Charlie', 'Brown', 'Charlie.Brown', '$2a$12$zDVLuA.X5TAto/.QTBcXruarUFsFIRThfEo0.pyVhJK/6UpY.4dQG', true);#password = hash&&salt
 
 -- Inserting initial data for TRAINEES table
 INSERT INTO TRAINEES (address, date_of_birth, user_id) VALUES

@@ -48,7 +48,7 @@ public class TrainerController {
             @RequestParam(required = true) final Long trainingTypeId) {
         TrainerDTO trainerDTO = new TrainerDTO(new TrainingType(trainingTypeId), new UserDTO(firstName, lastName, true));
         Trainer trainer = trainerService.createTrainer(trainerDTO);
-        Credentials credentials = new Credentials(trainer.getUser().getUserName(), trainer.getUser().getPassword());
+        Credentials credentials = new Credentials(trainer.getUser().getUsername(), trainer.getUser().getPassword());
         return ResponseEntity.ok(credentials);
     }
 
@@ -96,7 +96,7 @@ public class TrainerController {
         if (trainer == null) {
             return ResponseEntity.notFound().build();
         }
-        List<Trainee> trainees = trainerService.getTrainees(trainer.getUser().getUserName(), credentials);
+        List<Trainee> trainees = trainerService.getTrainees(trainer.getUser().getUsername(), credentials);
         return ResponseEntity.ok(trainerMapper.trainerToTraineeResponseDTO(trainer, trainees));
     }
 

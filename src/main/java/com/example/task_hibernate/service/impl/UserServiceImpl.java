@@ -8,6 +8,8 @@ import com.example.task_hibernate.model.dto.serviceDTOs.UserDTO;
 import com.example.task_hibernate.repository.UserRepository;
 import com.example.task_hibernate.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.bcrypt.BCrypt;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,9 +21,11 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
     private static final int PASSWORD_LENGTH = 10;
 
+    private final BCryptPasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(BCryptPasswordEncoder passwordEncoder, UserRepository userRepository) {
+        this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
     }
 
@@ -31,8 +35,8 @@ public class UserServiceImpl implements UserService {
         user.setFirstName(userDTO.getFirstName());
         user.setLastName(userDTO.getLastName());
         user.setIsActive(userDTO.getIsActive());
-        user.setUserName(generateUserName(userDTO.getFirstName(), userDTO.getLastName()));
-        user.setPassword(generatePassword());
+        user.setUsername(generateUserName(userDTO.getFirstName(), userDTO.getLastName()));
+        user.setPassword(passwordEncoder.encode(generatePassword()));
 
         return userRepository.save(user);
     }
@@ -49,19 +53,22 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Optional<User> getUserByUserName(String userName) {
-        return userRepository.findByUserName(userName);
+        return userRepository.findByUsername(userName);
     }
 
     @Override
     public boolean changeUserPassword(String password, String username) {
+        boolean passwordChanged;
         User updateUser = findByUsername(username);
-        if (updateUser.getPassword().equals(password)) {
+        if (passwordEncoder.matches(password, updateUser.getPassword())) {
             log.info("User with username {} is already using the password", username);
-            return false;
+            passwordChanged =  false;
+        } else {
+            updateUser.setPassword(passwordEncoder.encode(password));
+            userRepository.save(updateUser);
+            passwordChanged = true;
         }
-        updateUser.setPassword(password);
-        userRepository.save(updateUser);
-        return true;
+        return passwordChanged;
     }
 
     @Override
@@ -90,11 +97,11 @@ public class UserServiceImpl implements UserService {
     }
 
     public boolean validateUserCredentials(Credentials credentials) {
-        Optional<User> user = userRepository.findByUserName(credentials.userName());
+        Optional<User> user = userRepository.findByUsername(credentials.userName());
         if (!user.isPresent()) {
             log.error("Invalid username");
             throw new AuthenticationFailedException("Invalid username");
-        } else if(!user.get().getPassword().equals(credentials.password())) {
+        } else if(!passwordEncoder.matches(credentials.password(), user.get().getPassword())) {
             log.error("Invalid password");
             throw new AuthenticationFailedException("Invalid password");
         }
@@ -120,11 +127,11 @@ public class UserServiceImpl implements UserService {
     }
 
     private boolean isUniqueUserName(String userName) {
-        return userRepository.findByUserName(userName).isEmpty();
+        return userRepository.findByUsername(userName).isEmpty();
     }
 
     private User findByUsername(String userName) {
-        Optional<User> user = userRepository.findByUserName(userName);
+        Optional<User> user = userRepository.findByUsername(userName);
         if (user.isEmpty()) {
             log.error("User with username {} not found", userName);
             throw new ResourceNotFoundException("User with username " + userName + " not found");

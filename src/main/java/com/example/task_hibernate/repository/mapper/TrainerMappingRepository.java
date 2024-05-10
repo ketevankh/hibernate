@@ -28,7 +28,7 @@ public class TrainerMappingRepository {
     }
     public static TrainerDTOForList trainerToTrainerDTOForList(Trainer trainer) {
         return new TrainerDTOForList(
-                trainer.getUser().getUserName(),
+                trainer.getUser().getUsername(),
                 trainer.getUser().getFirstName(),
                 trainer.getUser().getLastName(),
                 trainer.getTrainingType()
@@ -47,7 +47,7 @@ public class TrainerMappingRepository {
         List<TraineeDTOForList> traineesList = new ArrayList<>();
         for(Trainee trainee : trainees) {
             traineesList.add(new TraineeDTOForList(
-                    trainee.getUser().getUserName(),
+                    trainee.getUser().getUsername(),
                     trainee.getUser().getFirstName(),
                     trainee.getUser().getLastName()
             ));

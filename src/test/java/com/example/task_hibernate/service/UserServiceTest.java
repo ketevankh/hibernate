@@ -37,7 +37,7 @@ public class UserServiceTest {
         user.setFirstName(userDTO.getFirstName());
         user.setLastName(userDTO.getLastName());
         user.setIsActive(userDTO.getIsActive());
-        user.setUserName(userService.generateUserName(userDTO.getFirstName(), userDTO.getLastName()));
+        user.setUsername(userService.generateUserName(userDTO.getFirstName(), userDTO.getLastName()));
         user.setPassword(userService.generatePassword());
 
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
@@ -45,7 +45,7 @@ public class UserServiceTest {
             assertEquals(user.getFirstName(), arg.getFirstName());
             assertEquals(user.getLastName(), arg.getLastName());
             assertEquals(user.getIsActive(), arg.getIsActive());
-            assertEquals(user.getUserName(), arg.getUserName());
+            assertEquals(user.getUsername(), arg.getUsername());
             assertTrue(arg.getPassword().matches("^[a-zA-Z0-9]*$"));
             return user;
         });
@@ -55,7 +55,7 @@ public class UserServiceTest {
         assertEquals(user.getFirstName(), createdUser.getFirstName());
         assertEquals(user.getLastName(), createdUser.getLastName());
         assertEquals(user.getIsActive(), createdUser.getIsActive());
-        assertEquals(user.getUserName(), createdUser.getUserName());
+        assertEquals(user.getUsername(), createdUser.getUsername());
         assertTrue(createdUser.getPassword().matches("^[a-zA-Z0-9]*$"));
         verify(userRepository, times(1)).save(any(User.class));
     }
@@ -92,17 +92,17 @@ public class UserServiceTest {
         String lastName = "Doe";
         String expectedUserName = firstName + "." + lastName;
 
-        when(userRepository.findByUserName(expectedUserName)).thenReturn(Optional.empty());
+        when(userRepository.findByUsername(expectedUserName)).thenReturn(Optional.empty());
         String userName = userService.generateUserName(firstName, lastName);
         assertEquals(expectedUserName, userName);
-        verify(userRepository, times(1)).findByUserName(expectedUserName);
+        verify(userRepository, times(1)).findByUsername(expectedUserName);
 
         User user = new User();
-        user.setUserName(expectedUserName);
-        when(userRepository.findByUserName(expectedUserName)).thenReturn(Optional.of(user));
+        user.setUsername(expectedUserName);
+        when(userRepository.findByUsername(expectedUserName)).thenReturn(Optional.of(user));
         userName = userService.generateUserName(firstName, lastName);
         assertNotEquals(expectedUserName, userName);
-        verify(userRepository, times(2)).findByUserName(expectedUserName);
+        verify(userRepository, times(2)).findByUsername(expectedUserName);
     }
 
     @Test
@@ -170,44 +170,44 @@ public class UserServiceTest {
         String oldPassword = "oldPassword";
         String newPassword = "newPassword";
         User user = new User();
-        user.setUserName(userName);
+        user.setUsername(userName);
         user.setPassword(oldPassword);
 
-        when(userRepository.findByUserName(userName)).thenReturn(Optional.of(user));
+        when(userRepository.findByUsername(userName)).thenReturn(Optional.of(user));
         boolean result = userService.changeUserPassword(newPassword, userName);
         assertTrue(result);
         assertEquals(newPassword, user.getPassword());
-        verify(userRepository, times(1)).findByUserName(userName);
+        verify(userRepository, times(1)).findByUsername(userName);
         verify(userRepository, times(1)).save(user);
 
         result = userService.changeUserPassword(newPassword, userName);
         assertFalse(result);
         assertEquals(newPassword, user.getPassword());
-        verify(userRepository, times(2)).findByUserName(userName);
+        verify(userRepository, times(2)).findByUsername(userName);
         verify(userRepository, times(1)).save(user);
 
-        when(userRepository.findByUserName(userName)).thenReturn(Optional.empty());
+        when(userRepository.findByUsername(userName)).thenReturn(Optional.empty());
         result = userService.changeUserPassword(newPassword, userName);
         assertFalse(result);
-        verify(userRepository, times(3)).findByUserName(userName);
+        verify(userRepository, times(3)).findByUsername(userName);
     }
 
     @Test
     void getUserByUserName() {
         String userName = "John.Doe";
         User user = new User();
-        user.setUserName(userName);
+        user.setUsername(userName);
 
-        when(userRepository.findByUserName(userName)).thenReturn(Optional.of(user));
+        when(userRepository.findByUsername(userName)).thenReturn(Optional.of(user));
         Optional<User> result = userService.getUserByUserName(userName);
         assertTrue(result.isPresent());
-        assertEquals(userName, result.get().getUserName());
-        verify(userRepository, times(1)).findByUserName(userName);
+        assertEquals(userName, result.get().getUsername());
+        verify(userRepository, times(1)).findByUsername(userName);
 
-        when(userRepository.findByUserName(userName)).thenReturn(Optional.empty());
+        when(userRepository.findByUsername(userName)).thenReturn(Optional.empty());
         result = userService.getUserByUserName(userName);
         assertFalse(result.isPresent());
-        verify(userRepository, times(2)).findByUserName(userName);
+        verify(userRepository, times(2)).findByUsername(userName);
     }
 
     @Test
@@ -226,25 +226,25 @@ public class UserServiceTest {
         String password = "password";
         Credentials credentials = new Credentials(userName, password);
         User user = new User();
-        user.setUserName(userName);
+        user.setUsername(userName);
         user.setPassword(password);
 
 
-        when(userRepository.findByUserName(userName)).thenReturn(Optional.empty());
+        when(userRepository.findByUsername(userName)).thenReturn(Optional.empty());
         boolean result = userService.validateUserCredentials(credentials);
         assertTrue(result);
-        verify(userRepository, times(1)).findByUserName(userName);
+        verify(userRepository, times(1)).findByUsername(userName);
 
         credentials = new Credentials(userName, "wrongPassword");
-        when(userRepository.findByUserName(userName)).thenReturn(Optional.of(user));
+        when(userRepository.findByUsername(userName)).thenReturn(Optional.of(user));
         result = userService.validateUserCredentials(credentials);
         assertTrue(result);
-        verify(userRepository, times(2)).findByUserName(userName);
+        verify(userRepository, times(2)).findByUsername(userName);
 
         credentials = new Credentials(userName, password);
-        when(userRepository.findByUserName(userName)).thenReturn(Optional.of(user));
+        when(userRepository.findByUsername(userName)).thenReturn(Optional.of(user));
         result = userService.validateUserCredentials(credentials);
         assertFalse(result);
-        verify(userRepository, times(3)).findByUserName(userName);
+        verify(userRepository, times(3)).findByUsername(userName);
     }
 }

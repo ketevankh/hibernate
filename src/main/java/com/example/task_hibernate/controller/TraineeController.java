@@ -47,7 +47,7 @@ public class TraineeController {
     public ResponseEntity<Credentials> registerTrainee(@Valid @RequestBody final TraineeRequestDTO traineeRequestDTO) {
         TraineeDTO traineeDTO = traineeMapper.traineeRequestDTOToTraineeDTO(traineeRequestDTO);
         Trainee trainee = traineeService.createTrainee(traineeDTO);
-        Credentials credentials = new Credentials(trainee.getUser().getUserName(), trainee.getUser().getPassword());
+        Credentials credentials = new Credentials(trainee.getUser().getUsername(), trainee.getUser().getPassword());
         return ResponseEntity.ok(credentials);
     }
 
@@ -117,7 +117,7 @@ public class TraineeController {
         Credentials credentials = new Credentials(userName, password);
         TraineeDTO traineeDTO = traineeMapper.traineeRequestDTOToTraineeDTO(traineeRequestDTO);
         Trainee trainee = traineeService.updateTrainee(traineeDTO, credentials).orElse(null);
-        List<Trainer> trainers = traineeService.getTrainers(trainee.getUser().getUserName(), credentials);
+        List<Trainer> trainers = traineeService.getTrainers(trainee.getUser().getUsername(), credentials);
         return ResponseEntity.ok(traineeMapper.traineeToTraineeResponseDTO(trainee, trainers));
     }
 

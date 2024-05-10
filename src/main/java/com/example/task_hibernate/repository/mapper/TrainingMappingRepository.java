@@ -14,7 +14,7 @@ public class TrainingMappingRepository {
         List<TrainingTraineeResponseDTO> result = new ArrayList<>();
         for (Training training : trainings) {
             result.add(new TrainingTraineeResponseDTO(training.getTrainingName(), training.getTrainingType().getTrainingType().name(),
-                    training.getTrainingDate(), training.getDuration(), training.getTrainer().getUser().getUserName()));
+                    training.getTrainingDate(), training.getDuration(), training.getTrainer().getUser().getUsername()));
         }
         return result;
     }
@@ -23,7 +23,7 @@ public class TrainingMappingRepository {
         List<TrainingTrainerResponseDTO> result = new ArrayList<>();
         for (Training training : trainings) {
             result.add(new TrainingTrainerResponseDTO(training.getTrainingName(), training.getTrainingType().getTrainingType().name(),
-                    training.getTrainingDate(), training.getDuration(), training.getTrainee().getUser().getUserName()));
+                    training.getTrainingDate(), training.getDuration(), training.getTrainee().getUser().getUsername()));
         }
         return result;
     }

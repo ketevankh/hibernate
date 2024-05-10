@@ -8,7 +8,6 @@ import com.example.task_hibernate.model.Training;
 import com.example.task_hibernate.model.User;
 import com.example.task_hibernate.model.dto.Credentials;
 import com.example.task_hibernate.model.dto.serviceDTOs.TraineeDTO;
-import com.example.task_hibernate.model.enums.ExerciseType;
 import com.example.task_hibernate.repository.TraineeRepository;
 import com.example.task_hibernate.service.TraineeService;
 import com.example.task_hibernate.service.TrainerService;
@@ -60,7 +59,7 @@ public class TraineeServiceImpl implements TraineeService {
     @Override
     public Optional<Trainee> getTraineeByUsername(String userName, Credentials credentials) {
         userService.validateUserCredentials(credentials);
-        return traineeRepository.findByUser_UserName(userName);
+        return traineeRepository.findByUser_Username(userName);
     }
 
     @Override
@@ -73,7 +72,7 @@ public class TraineeServiceImpl implements TraineeService {
     public Optional<Trainee> updateTrainee(TraineeDTO trainee, Credentials credentials) {
         userService.validateUserCredentials(credentials);
 
-        Trainee tmpTrainee = traineeRepository.findByUser_UserName(credentials.userName()).get();
+        Trainee tmpTrainee = traineeRepository.findByUser_Username(credentials.userName()).get();
         Optional<User> updatedUser = userService.updateUser(tmpTrainee.getUser().getId(), trainee.getUser());
         if (!updatedUser.isPresent()) {
             log.error("User update failed");
@@ -90,7 +89,7 @@ public class TraineeServiceImpl implements TraineeService {
     @Override
     public boolean changeActiveStatus(Boolean isActive, Credentials credentials) {
         userService.validateUserCredentials(credentials);
-        Trainee trainee = traineeRepository.findByUser_UserName(credentials.userName()).get();
+        Trainee trainee = traineeRepository.findByUser_Username(credentials.userName()).get();
         return userService.changeActiveStatus(trainee.getUser().getId(), isActive);
     }
 
@@ -101,7 +100,7 @@ public class TraineeServiceImpl implements TraineeService {
         boolean traineeDeleted = false;
 
         if (findTraineeByUsername(userName)) {
-            traineeRepository.deleteByUser_UserName(userName);
+            traineeRepository.deleteByUser_Username(userName);
             traineeDeleted = true;
         }
         return traineeDeleted;
@@ -152,11 +151,11 @@ public class TraineeServiceImpl implements TraineeService {
             log.warn("No Trainings with Trainers found, add training first");
         } else if (trainerUsernames.isEmpty()) {
             log.info("All trainers and trainings are deleted for user: {}", userName);
-            toRemove = tmpTrainers.stream().map(trainer -> trainer.getUser().getUserName()).toList();
+            toRemove = tmpTrainers.stream().map(trainer -> trainer.getUser().getUsername()).toList();
         } else {
             for (Trainer trainer : tmpTrainers) {
-                if (!trainerUsernames.contains(trainer.getUser().getUserName())) {
-                    toRemove.add(trainer.getUser().getUserName());
+                if (!trainerUsernames.contains(trainer.getUser().getUsername())) {
+                    toRemove.add(trainer.getUser().getUsername());
                 }
             }
         }
@@ -178,12 +177,12 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     private Boolean findTraineeByUsername(String username) {
-        Optional<Trainee> trainee = traineeRepository.findByUser_UserName(username);
+        Optional<Trainee> trainee = traineeRepository.findByUser_Username(username);
         if (!trainee.isPresent()) {
             log.error("Trainee with username {} not found, userName)", username);
             throw new ResourceNotFoundException("Trainee with username " + username + " not found");
         }
-        return traineeRepository.findByUser_UserName(username).isPresent();
+        return traineeRepository.findByUser_Username(username).isPresent();
     }
 
 }
