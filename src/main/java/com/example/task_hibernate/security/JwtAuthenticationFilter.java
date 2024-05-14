@@ -12,6 +12,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Objects;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -19,6 +20,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private CustomUserDetailsService userDetailsService;
 
     public JwtAuthenticationFilter(JwtUtil jwtUtil, CustomUserDetailsService userDetailsService) {
+        Objects.requireNonNull(jwtUtil, "JwtUtil must not be null");
+        Objects.requireNonNull(userDetailsService, "CustomUserDetailsService must not be null");
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
     }
